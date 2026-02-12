@@ -18,13 +18,13 @@
 
         .glow-red { box-shadow: 0 0 15px rgba(185, 28, 28, 0.2); }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        .tab-content.active { display: grid; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
         .disabled-btn { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         
-        /* 탭 하이라이트 및 네온 */
+        /* 탭 하이라이트 */
         .tab-highlight { animation: pulse-red 2.5s infinite; border: 1px solid rgba(185, 28, 28, 0.4); }
         @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 5px rgba(185, 28, 28, 0.2); } 50% { box-shadow: 0 0 20px rgba(185, 28, 28, 0.6); border-color: rgba(185, 28, 28, 0.8); } }
         
@@ -48,6 +48,9 @@
         }
         .tooltip-container:hover .tooltip-box, .tooltip-container.active .tooltip-box { visibility: visible; opacity: 1; }
 
+        @media (max-width: 1023px) {
+            .tab-content.active { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+        }
         @media (max-width: 768px) {
             .tooltip-box { position: fixed; top: 50%; left: 50%; bottom: auto; transform: translate(-50%, -50%); width: 85vw; max-width: 300px; pointer-events: auto; }
         }
@@ -56,16 +59,16 @@
 <body class="p-3 md:p-8 flex flex-col items-center min-h-screen text-sm lg:text-base leading-relaxed text-left">
     <div class="w-full max-w-6xl text-left">
         <!-- Header -->
-        <header class="flex flex-col py-4 lg:py-6 border-b border-red-900 mb-6 lg:mb-8">
+        <header class="flex flex-col py-4 lg:py-6 border-b border-red-900 mb-6 lg:mb-8 text-left">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="text-red-700">
+                    <div class="text-red-700 text-left">
                         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" class="lg:w-9 lg:h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" x2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
                     </div>
                     <h1 class="text-xl lg:text-3xl font-black italic uppercase tracking-tighter leading-none text-white text-left">LCB: 거던 계산기</h1>
                 </div>
                 
-                <!-- 상단 토글 -->
+                <!-- 상단 탭 전환 -->
                 <nav class="flex bg-neutral-900 p-1 rounded-lg tab-highlight self-start sm:self-center relative">
                     <button onclick="switchTab('eff')" id="tab-btn-eff-top" class="relative px-6 py-2 text-xs lg:text-sm font-black rounded-md transition-all-200 bg-red-800 text-white z-10">효율 분석</button>
                     <button onclick="switchTab('target')" id="tab-btn-target-top" class="relative px-6 py-2 text-xs lg:text-sm font-black rounded-md transition-all-200 text-neutral-500 hover:text-neutral-300 z-10 flex items-center gap-1">
@@ -83,7 +86,7 @@
         </header>
 
         <main class="w-full flex flex-col gap-6 text-left">
-            <!-- 공통 설정 (Max Enk / Hard Mode) -->
+            <!-- 공통 기초 설정 섹션 -->
             <section class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 lg:p-8 shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 left-0 w-1.5 lg:w-2 h-full bg-red-700"></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-end">
@@ -92,11 +95,11 @@
                             <span class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none">엔케팔린 최대치</span>
                             <span class="bg-red-700 text-[9px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase">Edit</span>
                         </label>
-                        <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-1.5 text-left text-left">
                             <button onclick="adjustValue('input-max-enk', -1)" class="adjust-btn flex-none">-</button>
                             <div class="relative flex-1 flex items-center justify-between bg-black border-2 border-red-900/30 group-hover:border-red-700 transition-all-200 h-[55px] lg:h-[60px] rounded-xl glow-red px-4 leading-none">
                                 <input type="number" id="input-max-enk" min="60" max="300" value="120" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="bg-transparent text-2xl lg:text-3xl font-black text-white w-full outline-none focus:text-red-500 text-right">
-                                <span class="text-red-800 font-bold text-lg italic ml-2">ENK</span>
+                                <span class="text-red-800 font-bold text-lg italic ml-2 text-left">ENK</span>
                             </div>
                             <button onclick="adjustValue('input-max-enk', 1)" class="adjust-btn flex-none">+</button>
                         </div>
@@ -121,7 +124,7 @@
                         <label class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none text-left">정산 방식 안내</label>
                         <div id="hard-note-area" class="p-3 lg:p-4 bg-red-950/10 border border-red-900/20 rounded-xl h-[55px] lg:h-[60px] flex items-center transition-all-200 overflow-hidden leading-none text-left">
                             <p class="text-[11px] lg:text-xs text-neutral-400 leading-tight italic">
-                                <span class="text-red-700 font-bold uppercase mr-1">Note:</span> <span id="note-text" class="text-neutral-400">정산 안내가 표시됩니다.</span>
+                                <span class="text-red-700 font-bold uppercase mr-1 text-left">Note:</span> <span id="note-text" class="text-neutral-400">정산 안내가 표시됩니다.</span>
                             </p>
                         </div>
                     </div>
@@ -129,100 +132,98 @@
             </section>
 
             <!-- 탭 1: 효율 분석 (1:1:1 고정 그리드) -->
-            <div id="content-eff" class="tab-content active">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 items-stretch">
-                    <!-- 1. 일일 거던 빈도 -->
-                    <section class="min-w-0">
-                        <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 lg:p-8 shadow-2xl relative overflow-hidden h-full flex flex-col">
-                            <div id="alert-area-eff" class="min-h-[45px] mb-4 flex flex-col justify-center text-center"></div>
-                            <div class="flex-1 flex flex-col gap-6">
-                                <div class="flex flex-col lg:flex-row items-center gap-6 text-left">
-                                    <div class="hidden lg:flex flex-col items-center gap-3">
-                                        <button onclick="adjustValue('input-daily-runs-v', 1)" class="adjust-btn w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-lg text-white font-bold hover:bg-red-900 transition-colors text-xl">+</button>
-                                        <input type="range" id="input-daily-runs-v" min="1" max="15" step="1" value="3" class="slider-vertical accent-red-700">
-                                        <button onclick="adjustValue('input-daily-runs-v', -1)" class="adjust-btn w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-lg text-white font-bold hover:bg-red-900 transition-colors text-xl">-</button>
+            <div id="content-eff" class="tab-content active lg:grid-cols-3 gap-4 lg:gap-6 items-stretch">
+                <!-- 1. 일일 거던 빈도 -->
+                <section class="min-w-0">
+                    <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 lg:p-8 shadow-2xl relative overflow-hidden h-full flex flex-col">
+                        <div id="alert-area-eff" class="min-h-[45px] mb-4 flex flex-col justify-center text-center"></div>
+                        <div class="flex-1 flex flex-col gap-6">
+                            <div class="flex flex-col lg:flex-row items-center gap-6 text-left">
+                                <div class="hidden lg:flex flex-col items-center gap-3">
+                                    <button onclick="adjustValue('input-daily-runs-v', 1)" class="adjust-btn w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-lg text-white font-bold hover:bg-red-900 transition-colors text-xl">+</button>
+                                    <input type="range" id="input-daily-runs-v" min="1" max="15" step="1" value="3" class="slider-vertical accent-red-700">
+                                    <button onclick="adjustValue('input-daily-runs-v', -1)" class="adjust-btn w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-lg text-white font-bold hover:bg-red-900 transition-colors text-xl">-</button>
+                                </div>
+                                <div class="flex-1 w-full space-y-5 text-left leading-none">
+                                    <div class="flex flex-col text-left"><h2 class="text-xs font-black text-neutral-400 uppercase tracking-widest mb-1 leading-none text-left">일일 거던 빈도</h2><div class="flex items-baseline leading-none text-left"><span id="display-daily-runs" class="text-6xl lg:text-8xl font-black text-white tracking-tighter text-left">3</span><span class="text-red-700 font-black ml-2 text-2xl lg:text-3xl uppercase text-left">회</span></div></div>
+                                    <div class="lg:hidden flex-1 flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-neutral-800">
+                                        <button onclick="adjustValue('input-daily-runs-m', -1)" class="adjust-btn h-8 w-8 text-xs flex-none">-</button>
+                                        <input type="range" id="input-daily-runs-m" min="1" max="15" step="1" value="3" class="flex-1 horizontal-slider">
+                                        <button onclick="adjustValue('input-daily-runs-m', 1)" class="adjust-btn h-8 w-8 text-xs flex-none">+</button>
                                     </div>
-                                    <div class="flex-1 w-full space-y-5 text-left leading-none">
-                                        <div class="flex flex-col text-left"><h2 class="text-xs font-black text-neutral-400 uppercase tracking-widest mb-1">일일 거던 빈도</h2><div class="flex items-baseline leading-none"><span id="display-daily-runs" class="text-6xl lg:text-8xl font-black text-white tracking-tighter">3</span><span class="text-red-700 font-black ml-2 text-2xl lg:text-3xl uppercase">회</span></div></div>
-                                        <div class="lg:hidden flex-1 flex items-center gap-2 bg-black/40 p-3 rounded-xl border border-neutral-800">
-                                            <button onclick="adjustValue('input-daily-runs-m', -1)" class="adjust-btn h-8 w-8 text-xs flex-none">-</button>
-                                            <input type="range" id="input-daily-runs-m" min="1" max="15" step="1" value="3" class="flex-1 horizontal-slider">
-                                            <button onclick="adjustValue('input-daily-runs-m', 1)" class="adjust-btn h-8 w-8 text-xs flex-none">+</button>
-                                        </div>
-                                        <div class="bg-black/50 p-3 lg:p-4 rounded-xl border border-neutral-800 flex justify-between items-center shadow-inner leading-none text-left">
-                                            <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">일일 소모</span>
-                                            <div id="display-module-cost-eff" class="text-neutral-200 font-bold text-sm lg:text-base leading-none text-right"><span class="text-white font-black">15</span>모듈 <span class="text-xs ml-1 text-neutral-600 font-normal tracking-widest">(300 ENK)</span></div>
-                                        </div>
-                                        <p id="display-available-modules-eff" class="text-[10px] lg:text-xs text-neutral-300 font-black tracking-tight text-right mt-2 drop-shadow-sm leading-none">매일 24개 수급 가능</p>
+                                    <div class="bg-black/50 p-3 lg:p-4 rounded-xl border border-neutral-800 flex justify-between items-center shadow-inner leading-none text-left text-left">
+                                        <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">일일 소모</span>
+                                        <div id="display-module-cost-eff" class="text-neutral-200 font-bold text-sm lg:text-base leading-none text-right"><span class="text-white font-black">15</span>모듈 <span class="text-xs ml-1 text-neutral-600 font-normal tracking-widest">(300 ENK)</span></div>
                                     </div>
+                                    <p id="display-available-modules-eff" class="text-[10px] lg:text-xs text-neutral-300 font-black tracking-tight text-right mt-2 drop-shadow-sm leading-none">매일 24개 수급 가능</p>
                                 </div>
                             </div>
                         </div>
-                    </section>
-                    <!-- 2. 주간 가동 분석 -->
-                    <section class="min-w-0 text-left">
-                        <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full text-left">
-                            <div class="flex items-center gap-3 mb-6 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left"><div class="w-1.5 h-4 bg-red-700"></div>주간 가동 분석</div>
-                            <div class="mb-6 p-4 bg-black/60 rounded-xl border border-neutral-800 text-xs space-y-3 font-mono flex-1 flex flex-col justify-center">
-                                <div class="flex justify-between items-center text-sm leading-none"><span>보너스 정산</span><span id="res-bonus-runs" class="text-red-500 font-bold">3회</span></div>
-                                <div class="flex justify-between items-center text-sm leading-none text-left"><span>일반 정산</span><span id="res-normal-runs" class="text-neutral-300 font-bold">18회</span></div>
-                                <div class="pt-3 border-t border-neutral-800 flex justify-between font-black uppercase tracking-tighter text-sm leading-none text-left"><span>주간 가동 총합</span><span id="res-total-runs" class="text-white underline underline-offset-4 decoration-red-900 font-black">21회</span></div>
+                    </div>
+                </section>
+                <!-- 2. 주간 가동 분석 -->
+                <section class="min-w-0 text-left">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full text-left">
+                        <div class="flex items-center gap-3 mb-6 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left"><div class="w-1.5 h-4 bg-red-700"></div>주간 가동 분석</div>
+                        <div class="mb-6 p-4 bg-black/60 rounded-xl border border-neutral-800 text-xs space-y-3 font-mono flex-1 flex flex-col justify-center">
+                            <div class="flex justify-between items-center text-sm leading-none"><span>보너스 정산</span><span id="res-bonus-runs" class="text-red-500 font-bold">3회</span></div>
+                            <div class="flex justify-between items-center text-sm leading-none text-left"><span>일반 정산</span><span id="res-normal-runs" class="text-neutral-300 font-bold text-left">18회</span></div>
+                            <div class="pt-3 border-t border-neutral-800 flex justify-between font-black uppercase tracking-tighter text-sm leading-none text-left"><span>주간 가동 총합</span><span id="res-total-runs" class="text-white underline underline-offset-4 decoration-red-900 font-black text-left">21회</span></div>
+                        </div>
+                        <div class="space-y-4 text-left leading-none text-left">
+                            <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left text-left">주간 합산 레벨</span><span class="text-2xl lg:text-3xl font-black text-white text-left"><span id="res-floored-levels">67</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left">LV</small></span></div>
+                            <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left text-left">파편 상자 수급</span><span class="text-2xl lg:text-3xl font-black text-red-600 text-left text-left"><span id="res-total-boxes-num">201</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left">ea</small></span></div>
+                            <div class="flex justify-between items-end pt-1 text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-sm lg:text-base text-left">파편 수급 기대값</span><span class="text-2xl lg:text-3xl font-black text-yellow-500 tracking-tight font-sans text-left"><span id="res-total-shards-num">402</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left">ea</small></span></div>
+                        </div>
+                    </article>
+                </section>
+                <!-- 3. 정가 주기 -->
+                <section class="min-w-0">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full justify-center text-center">
+                        <div class="flex flex-col items-center py-4 flex-1 justify-center text-center">
+                            <div class="space-y-2 text-center w-full">
+                                <p class="text-xs lg:text-sm text-neutral-500 uppercase font-black tracking-widest leading-none text-center">정가 주기</p>
+                                <p class="text-[8px] lg:text-[9px] text-neutral-600 italic leading-tight font-bold text-center block w-full break-keep opacity-80">
+                                    * 추출 파편 및 랜덤 상자 미고려<br>(실제 가동 횟수는 더 적을 수 있음)
+                                </p>
+                                <div class="text-neutral-200 font-bold text-base leading-none text-center">약 <span id="res-days-needed" class="text-red-500 text-4xl lg:text-5xl font-black underline underline-offset-8 decoration-red-800 leading-none text-center">7.0</span>일 마다</div>
+                                <p class="text-xs lg:text-sm text-neutral-400 font-black uppercase tracking-widest text-center leading-none">인격/에고 1개 정가 가능</p>
                             </div>
-                            <div class="space-y-4 text-left leading-none text-left">
-                                <div class="flex justify-between items-end border-b border-neutral-800 pb-3"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left">주간 합산 레벨</span><span class="text-2xl lg:text-3xl font-black text-white"><span id="res-floored-levels">67</span><small class="text-xs font-normal ml-1 uppercase font-sans">LV</small></span></div>
-                                <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left">파편 상자 수급</span><span class="text-2xl lg:text-3xl font-black text-red-600"><span id="res-total-boxes-num">201</span><small class="text-xs font-normal ml-1 uppercase font-sans">ea</small></span></div>
-                                <div class="flex justify-between items-end pt-1 text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-sm lg:text-base text-left">파편 수급 기대값</span><span class="text-2xl lg:text-3xl font-black text-yellow-500 tracking-tight font-sans text-left"><span id="res-total-shards-num">402</span><small class="text-xs font-normal ml-1 uppercase font-sans">ea</small></span></div>
-                            </div>
-                        </article>
-                    </section>
-                    <!-- 3. 정가 주기 -->
-                    <section class="min-w-0">
-                        <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full justify-center text-center">
-                            <div class="flex flex-col items-center py-4 flex-1 justify-center text-center">
-                                <div class="space-y-2 text-center w-full">
-                                    <p class="text-xs lg:text-sm text-neutral-500 uppercase font-black tracking-widest leading-none text-center">정가 주기</p>
-                                    <p class="text-[8px] lg:text-[9px] text-neutral-600 italic leading-tight font-bold text-center block w-full break-keep opacity-80">
-                                        * 추출 파편 및 랜덤 상자 미고려<br>(실제 가동 횟수는 더 적을 수 있음)
-                                    </p>
-                                    <div class="text-neutral-200 font-bold text-base leading-none text-center">약 <span id="res-days-needed" class="text-red-500 text-4xl lg:text-5xl font-black underline underline-offset-8 decoration-red-800 leading-none">7.0</span>일 마다</div>
-                                    <p class="text-xs lg:text-sm text-neutral-400 font-black uppercase tracking-widest text-center leading-none">인격/에고 1개 정가 가능</p>
-                                </div>
-                                <div class="w-full border-t border-neutral-800 pt-8 space-y-4 text-center"><p class="text-xs lg:text-sm text-neutral-500 font-black uppercase tracking-widest leading-none text-center">주간 정산 결과</p><div class="text-5xl lg:text-7xl font-black text-white tracking-tighter leading-none text-center"><span id="res-identity-count">1.01</span> <small class="text-xl text-neutral-600 font-normal ml-1 uppercase italic font-sans text-center">개</small></div><p class="text-[11px] text-neutral-500 font-bold uppercase tracking-tighter leading-none text-center">주간 획득 인격/에고 개수</p></div>
-                            </div>
-                        </article>
-                    </section>
-                </div>
+                            <div class="w-full border-t border-neutral-800 pt-8 space-y-4 text-center text-center"><p class="text-xs lg:text-sm text-neutral-500 font-black uppercase tracking-widest leading-none text-center">주간 정산 결과</p><div class="text-5xl lg:text-7xl font-black text-white tracking-tighter leading-none text-center text-center text-center text-center"><span id="res-identity-count">1.01</span> <small class="text-xl text-neutral-600 font-normal ml-1 uppercase italic font-sans text-center">개</small></div><p class="text-[11px] text-neutral-500 font-bold uppercase tracking-tighter leading-none text-center">주간 획득 인격/에고 개수</p></div>
+                        </div>
+                    </article>
+                </section>
             </div>
 
             <!-- 탭 2: 목표 달성 -->
             <div id="content-target" class="tab-content hidden">
-                <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch">
+                <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch text-left">
                     <!-- 1. 목표 설정 -->
-                    <section class="w-full lg:w-[210px] lg:flex-none text-left">
+                    <section class="w-full lg:w-[210px] lg:flex-none text-left text-left">
                         <article class="bg-neutral-900 border border-neutral-800 border-t-4 border-t-orange-500 rounded-xl p-4 shadow-2xl h-full flex flex-col text-left">
                             <div class="min-h-[30px] mb-3 flex flex-col justify-center text-xs font-black text-orange-400 uppercase tracking-widest leading-tight text-left">목표 정보 활성화</div>
                             <div class="flex flex-col gap-4 text-left flex-1 justify-center">
                                 <div class="flex flex-col gap-1.5 group text-left">
-                                    <label for="input-target-date" class="flex items-center gap-1.5 leading-none cursor-pointer text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left">정가 마감일</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none">Edit</span></label>
+                                    <label for="input-target-date" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left">정가 마감일</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none">Edit</span></label>
                                     <div class="input-box-container px-2 focus-within:border-red-700 text-left"><input type="date" id="input-target-date" class="bg-transparent w-full text-white font-black outline-none cursor-pointer text-sm text-left"></div>
                                 </div>
                                 <div class="flex flex-col gap-1.5 group text-left text-left">
                                     <label for="input-current-boxes" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left">보유 파편 상자</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none">Edit</span></label>
-                                    <div class="flex items-center gap-1 text-left">
+                                    <div class="flex items-center gap-1 text-left text-left">
                                         <button onclick="adjustValue('input-current-boxes', -1)" class="adjust-btn flex-none">-</button>
                                         <div class="input-box-container flex-1">
-                                            <input type="number" id="input-current-boxes" value="0" min="0" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right">
+                                            <input type="number" id="input-current-boxes" value="0" min="0" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right text-right">
                                             <span class="input-unit text-yellow-600 text-right">개</span>
                                         </div>
                                         <button onclick="adjustValue('input-current-boxes', 1)" class="adjust-btn flex-none text-left">+</button>
                                     </div>
                                 </div>
                                 <div class="flex flex-col gap-1.5 group text-left text-left">
-                                    <label for="input-target-ids" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left">목표 정가 개수</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none text-left">Edit</span></label>
-                                    <div class="flex items-center gap-1 text-left">
+                                    <label for="input-target-ids" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left text-left">목표 정가 개수</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none text-left">Edit</span></label>
+                                    <div class="flex items-center gap-1 text-left text-left">
                                         <button onclick="adjustValue('input-target-ids', -1)" class="adjust-btn flex-none text-left">-</button>
-                                        <div class="input-box-container flex-1">
-                                            <input type="number" id="input-target-ids" value="1" min="1" max="100" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right">
+                                        <div class="input-box-container flex-1 text-left">
+                                            <input type="number" id="input-target-ids" value="1" min="1" max="100" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right text-right">
                                             <span class="input-unit text-red-700 text-right">개</span>
                                         </div>
                                         <button onclick="adjustValue('input-target-ids', 1)" class="adjust-btn flex-none text-left">+</button>
@@ -258,7 +259,7 @@
                                             </div>
                                             <div class="border-t border-neutral-800 pt-3 text-left text-left text-left">
                                                 <p class="text-red-500 font-black text-[11px] uppercase mb-1 text-left text-left">최대 가동 한계</p>
-                                                <p class="text-[10px] text-neutral-400 leading-normal text-left text-left text-left text-left">일일 퀘스트 수행(경던 1회 + 끈던 1회 = 모듈 5)만 남기고 <span class="text-white text-left text-left text-left">모든 엔케팔린을 거던에 쏟아붓는</span> 극한의 기준입니다.</p>
+                                                <p class="text-[10px] text-neutral-400 leading-normal text-left text-left text-left text-left">일일 퀘스트 수행(경던 1회 + 끈던 1회 = 모듈 5)만 남기고 <span class="text-white text-left text-left text-left text-left">모든 엔케팔린을 거던에 쏟아붓는</span> 극한의 기준입니다.</p>
                                             </div>
                                         </div>
                                     </div>
@@ -289,7 +290,7 @@
             </div>
             
             <!-- 모바일 전용 하단 토글 -->
-            <div class="lg:hidden mt-4 flex justify-center pb-8">
+            <div class="lg:hidden mt-4 flex justify-center pb-8 text-left">
                 <nav class="flex bg-neutral-900 p-1 rounded-lg tab-highlight relative">
                     <button onclick="switchTab('eff')" id="tab-btn-eff-bottom" class="relative px-6 py-2.5 text-xs font-black rounded-md transition-all-200 bg-red-800 text-white z-10">효율 분석</button>
                     <button onclick="switchTab('target')" id="tab-btn-target-bottom" class="relative px-6 py-2.5 text-xs font-black rounded-md transition-all-200 text-neutral-500 hover:text-neutral-300 z-10 flex items-center gap-1">
@@ -299,8 +300,8 @@
             </div>
         </main>
         
-        <footer class="mt-8 lg:mt-20 text-center border-t border-neutral-900 pt-10 mb-10 text-center text-center text-center text-center text-center">
-            <p class="text-[10px] text-zinc-800 uppercase tracking-[0.6em] font-black italic opacity-40 uppercase text-center text-center text-center text-center">Authorized Intelligence Unit - Sazabi Custom</p>
+        <footer class="mt-8 lg:mt-20 text-center border-t border-neutral-900 pt-10 mb-10 text-center text-center text-center">
+            <p class="text-[10px] text-zinc-800 uppercase tracking-[0.6em] font-black italic opacity-40 text-center">Authorized Intelligence Unit - Sazabi Custom</p>
         </footer>
     </div>
 
@@ -360,8 +361,8 @@
             input.value = val;
             
             if(id === 'input-max-enk') maxEnk = val;
-            if(id === 'input-current-boxes') currentBoxes = val;
-            if(id === 'input-target-ids') targetIds = val;
+            if(id === 'input-current-boxes') { currentBoxes = val; safeSave(STORAGE_KEYS.CURRENT_BOXES, val); }
+            if(id === 'input-target-ids') { targetIds = val; safeSave(STORAGE_KEYS.TARGET_IDS, val); }
             if(id.includes('daily-runs')) dailyRuns = val;
             updateAll();
         };
@@ -374,6 +375,8 @@
         let maxEnk = parseInt(safeGet(STORAGE_KEYS.MAX_ENK, "120")) || 120;
         let isHard = safeGet(STORAGE_KEYS.IS_HARD, "false") === "true";
         let hardStyle = safeGet(STORAGE_KEYS.HARD_STYLE, "bulk");
+        
+        // 목표 달성 탭 입력값 영구화
         let targetIds = parseInt(safeGet(STORAGE_KEYS.TARGET_IDS, "1")) || 1;
         let currentBoxes = parseInt(safeGet(STORAGE_KEYS.CURRENT_BOXES, "0")) || 0;
         const dDate = new Date(); dDate.setDate(dDate.getDate() + 14);
@@ -489,15 +492,15 @@
             }
         }
 
-        elMaxEnkInput.addEventListener('input', (e) => { maxEnk = parseInt(e.target.value) || 0; updateAll(); });
-        elIsHardInput.addEventListener('change', (e) => { isHard = e.target.checked; updateAll(); });
-        elBtnBulk.onclick = () => { if(isHard) { hardStyle = 'bulk'; updateAll(); } };
-        elBtnEach.onclick = () => { if(isHard) { hardStyle = 'each'; updateAll(); } };
+        elMaxEnkInput.addEventListener('input', (e) => { maxEnk = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.MAX_ENK, maxEnk); updateAll(); });
+        elIsHardInput.addEventListener('change', (e) => { isHard = e.target.checked; safeSave(STORAGE_KEYS.IS_HARD, isHard); updateAll(); });
+        elBtnBulk.onclick = () => { if(isHard) { hardStyle = 'bulk'; safeSave(STORAGE_KEYS.HARD_STYLE, hardStyle); updateAll(); } };
+        elBtnEach.onclick = () => { if(isHard) { hardStyle = 'each'; safeSave(STORAGE_KEYS.HARD_STYLE, hardStyle); updateAll(); } };
         elTargetDateInput.addEventListener('input', (e) => { targetDate = e.target.value; safeSave(STORAGE_KEYS.TARGET_DATE, targetDate); updateAll(); });
-        elTargetIdsInput.addEventListener('input', (e) => { targetIds = parseInt(e.target.value) || 1; updateAll(); });
-        elCurrentBoxesInput.addEventListener('input', (e) => { currentBoxes = parseInt(e.target.value) || 0; updateAll(); });
-        elDailyRunsM.addEventListener('input', (e) => { dailyRuns = parseInt(e.target.value) || 1; updateAll(); });
-        elDailyRunsV.addEventListener('input', (e) => { dailyRuns = parseInt(e.target.value) || 1; updateAll(); });
+        elTargetIdsInput.addEventListener('input', (e) => { targetIds = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.TARGET_IDS, targetIds); updateAll(); });
+        elCurrentBoxesInput.addEventListener('input', (e) => { currentBoxes = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.CURRENT_BOXES, currentBoxes); updateAll(); });
+        elDailyRunsM.addEventListener('input', (e) => { dailyRuns = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.DAILY_RUNS, dailyRuns); updateAll(); });
+        elDailyRunsV.addEventListener('input', (e) => { dailyRuns = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.DAILY_RUNS, dailyRuns); updateAll(); });
 
         const ttTrigger = document.getElementById('tooltip-trigger');
         if(ttTrigger) { ttTrigger.addEventListener('click', (e) => { e.stopPropagation(); ttTrigger.classList.toggle('active'); }); }
