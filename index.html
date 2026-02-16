@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LCB: 거던 계산기</title>
+    <title>LCB: 다용도 계산기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap');
@@ -21,10 +21,10 @@
         .tab-content.active { display: grid; animation: fadeIn 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         
-        .disabled-btn { opacity: 0.3; filter: grayscale(1); pointer-events: none; }
+        /* 수정됨: pointer-events: none 제거하여 비활성 상태에서도 클릭 가능하게 변경 */
+        .disabled-btn { opacity: 0.3; filter: grayscale(1); cursor: pointer; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
         
-        /* 탭 하이라이트 */
         .tab-highlight { animation: pulse-red 2.5s infinite; border: 1px solid rgba(185, 28, 28, 0.4); }
         @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 5px rgba(185, 28, 28, 0.2); } 50% { box-shadow: 0 0 20px rgba(185, 28, 28, 0.6); border-color: rgba(185, 28, 28, 0.8); } }
         
@@ -40,19 +40,24 @@
         .adjust-btn:hover { background-color: #262626; color: white; border-color: #404040; }
         .adjust-btn:active { background-color: #b91c1c; color: white; border-color: #7f1d1d; }
 
-        .tooltip-container { position: relative; display: inline-block; z-index: 100; }
+        .tooltip-container { position: relative; display: inline-block; z-index: 50; }
         .tooltip-box { 
-            visibility: hidden; position: absolute; z-index: 999; bottom: 140%; left: 50%; transform: translateX(-50%); 
-            width: 280px; background-color: #111; border: 1px solid #b91c1c; padding: 1rem; border-radius: 0.75rem; 
+            visibility: hidden; position: absolute; z-index: 999; 
+            background-color: #111; border: 1px solid #b91c1c; padding: 1rem; border-radius: 0.75rem; 
             box-shadow: 0 15px 40px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.2s, visibility 0.2s; pointer-events: none;
+            width: 280px; /* Fixed width for PC to prevent squash */
+            bottom: 140%; left: 50%; transform: translateX(-50%);
         }
         .tooltip-container:hover .tooltip-box, .tooltip-container.active .tooltip-box { visibility: visible; opacity: 1; }
 
-        @media (max-width: 1023px) {
-            .tab-content.active { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-        }
+        /* Mobile specific tooltip styling overrides */
         @media (max-width: 768px) {
-            .tooltip-box { position: fixed; top: 50%; left: 50%; bottom: auto; transform: translate(-50%, -50%); width: 85vw; max-width: 300px; pointer-events: auto; }
+            .tooltip-box { 
+                position: fixed; top: 50%; left: 50%; bottom: auto; right: auto;
+                transform: translate(-50%, -50%) !important; 
+                width: 85vw; max-width: 300px; margin: 0; 
+                pointer-events: auto; 
+            }
         }
     </style>
 </head>
@@ -62,25 +67,27 @@
         <header class="flex flex-col py-4 lg:py-6 border-b border-red-900 mb-6 lg:mb-8 text-left">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                 <div class="flex items-center gap-3">
-                    <div class="text-red-700 text-left">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" class="lg:w-9 lg:h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2"/><line x1="8" x2="16" y1="6" x2="6"/><line x1="16" x2="16" y1="14" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+                    <div class="text-red-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" class="lg:w-9 lg:h-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
                     </div>
-                    <h1 class="text-xl lg:text-3xl font-black italic uppercase tracking-tighter leading-none text-white text-left">LCB: 거던 계산기</h1>
+                    <h1 class="text-xl lg:text-3xl font-black italic uppercase tracking-tighter leading-none text-white text-left">LCB: 다용도 계산기</h1>
                 </div>
                 
-                <!-- 상단 탭 전환 -->
-                <nav class="flex bg-neutral-900 p-1 rounded-lg tab-highlight self-start sm:self-center relative">
-                    <button onclick="switchTab('eff')" id="tab-btn-eff-top" class="relative px-6 py-2 text-xs lg:text-sm font-black rounded-md transition-all-200 bg-red-800 text-white z-10">효율 분석</button>
-                    <button onclick="switchTab('target')" id="tab-btn-target-top" class="relative px-6 py-2 text-xs lg:text-sm font-black rounded-md transition-all-200 text-neutral-500 hover:text-neutral-300 z-10 flex items-center gap-1">
-                        목표 달성 <span id="arrow-top" class="move-arrow text-red-500 font-black">»</span>
+                <nav class="flex bg-neutral-900 p-1 rounded-lg tab-highlight mx-auto sm:mx-0 sm:self-center relative">
+                    <button onclick="switchTab('cycle')" id="tab-btn-cycle-top" class="relative px-2.5 sm:px-4 py-2 text-[9.5px] sm:text-[11px] lg:text-sm font-black rounded-md transition-all-200 bg-red-800 text-white z-10 whitespace-nowrap tracking-tighter sm:tracking-normal">정가 주기 계산</button>
+                    <button onclick="switchTab('shard')" id="tab-btn-shard-top" class="relative px-2.5 sm:px-4 py-2 text-[9.5px] sm:text-[11px] lg:text-sm font-black rounded-md transition-all-200 text-neutral-500 hover:text-neutral-300 z-10 flex items-center gap-0.5 sm:gap-1 whitespace-nowrap tracking-tighter sm:tracking-normal">
+                        파편 모으기 <span id="arrow-shard-top" class="move-arrow text-red-500 font-black">»</span>
+                    </button>
+                    <button onclick="switchTab('billing')" id="tab-btn-billing-top" class="relative px-2.5 sm:px-4 py-2 text-[9.5px] sm:text-[11px] lg:text-sm font-black rounded-md transition-all-200 text-neutral-500 hover:text-neutral-300 z-10 flex items-center gap-0.5 sm:gap-1 whitespace-nowrap tracking-tighter sm:tracking-normal">
+                        충전용 과금 <span id="arrow-billing-top" class="move-arrow text-red-500 font-black">»</span>
                     </button>
                 </nav>
             </div>
             
-            <div class="bg-red-950/10 border border-red-900/30 p-3 lg:p-4 rounded-lg flex items-start gap-2 text-left overflow-hidden">
+            <div class="bg-red-950/10 border border-red-900/30 p-3 lg:p-4 rounded-lg flex items-start gap-2 text-left overflow-hidden text-left">
                 <div class="text-red-500 mt-1 flex-none"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="lg:w-[18px] lg:h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg></div>
                 <p class="text-xs lg:text-sm text-neutral-400 leading-tight">
-                    본 계산기는 <span class="text-white font-bold underline decoration-red-700">패스/월정액 구매, 패스 퀘스트, 주간 추가 보상, 일일 2회 충전</span> 수행을 전제로 합니다.
+                    본 계산기는 <span class="text-white font-bold underline decoration-red-700 uppercase tracking-tighter">패스 / 월간 광기 2종 구입</span> 상태를 기본 전제로 동작합니다.
                 </p>
             </div>
         </header>
@@ -88,57 +95,99 @@
         <main class="w-full flex flex-col gap-6 text-left">
             <!-- 공통 기초 설정 섹션 -->
             <section class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 lg:p-8 shadow-2xl relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-1.5 lg:w-2 h-full bg-red-700"></div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-end">
+                <div class="absolute top-0 left-0 w-1.5 lg:w-2 h-full bg-red-700 text-left"></div>
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end text-left">
                     <div class="flex flex-col gap-3">
                         <label for="input-max-enk" class="flex items-center gap-2 cursor-pointer group text-left">
                             <span class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none">엔케팔린 최대치</span>
                             <span class="bg-red-700 text-[9px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase">Edit</span>
                         </label>
-                        <div class="flex items-center gap-1.5 text-left text-left">
+                        <div class="flex items-center gap-1.5 text-left">
                             <button onclick="adjustValue('input-max-enk', -1)" class="adjust-btn flex-none">-</button>
                             <div class="relative flex-1 flex items-center justify-between bg-black border-2 border-red-900/30 group-hover:border-red-700 transition-all-200 h-[55px] lg:h-[60px] rounded-xl glow-red px-4 leading-none">
                                 <input type="number" id="input-max-enk" min="60" max="300" value="120" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="bg-transparent text-2xl lg:text-3xl font-black text-white w-full outline-none focus:text-red-500 text-right">
-                                <span class="text-red-800 font-bold text-lg italic ml-2 text-left">ENK</span>
+                                <span class="text-red-800 font-bold text-lg italic ml-2">ENK</span>
                             </div>
-                            <button onclick="adjustValue('input-max-enk', 1)" class="adjust-btn flex-none">+</button>
+                            <button onclick="adjustValue('input-max-enk', 1)" class="adjust-btn flex-none text-left">+</button>
                         </div>
                     </div>
                     <div class="flex flex-col gap-3">
-                        <label class="flex items-center gap-4 cursor-pointer group leading-none text-xs lg:text-sm font-black transition-colors text-neutral-500 group-hover:text-neutral-300 uppercase tracking-widest">
-                            <input type="checkbox" id="input-is-hard" class="w-5 h-5 accent-red-600 bg-neutral-800 border-neutral-700 rounded cursor-pointer">
-                            <span id="hard-label">주간 보상 하드 모드 수령</span>
+                        <label for="input-enk-charges" class="flex items-center gap-2 cursor-pointer group text-left">
+                            <span class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none text-left">일일 광기 충전</span>
+                            <span class="bg-red-700 text-[9px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase">Edit</span>
                         </label>
-                        <div class="flex gap-2 h-[55px] lg:h-[60px]">
-                            <button id="btn-bulk" class="flex-1 flex flex-col justify-center items-center rounded-xl border-2 border-neutral-800 bg-neutral-950 transition-all-200 leading-none">
-                                <span id="bulk-text" class="text-xs lg:text-sm font-black uppercase text-neutral-500 transition-colors">3회분 일괄 수령</span>
-                                <span class="text-[9px] lg:text-[10px] text-zinc-600 font-bold italic mt-1 uppercase tracking-tighter">하드 1판 소모</span>
-                            </button>
-                            <button id="btn-each" class="flex-1 flex flex-col justify-center items-center rounded-xl border-2 border-neutral-800 bg-neutral-950 transition-all-200 leading-none">
-                                <span id="each-text" class="text-xs lg:text-sm font-black uppercase text-neutral-500 transition-colors">각각 수령 (3회)</span>
-                                <span class="text-[9px] lg:text-[10px] text-zinc-600 font-bold italic mt-1 uppercase tracking-tighter">하드 3판 소모</span>
-                            </button>
+                        <div class="flex items-center gap-1.5 text-left">
+                            <button onclick="adjustValue('input-enk-charges', -1)" class="adjust-btn flex-none">-</button>
+                            <div class="relative flex-1 flex items-center justify-between bg-black border-2 border-red-900/30 group-hover:border-red-700 transition-all-200 h-[55px] lg:h-[60px] rounded-xl glow-red px-4 leading-none text-right">
+                                <input type="number" id="input-enk-charges" min="0" max="10" value="2" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="bg-transparent text-2xl lg:text-3xl font-black text-white w-full outline-none focus:text-red-500 text-right text-right">
+                                <span class="text-red-800 font-bold text-lg italic ml-2">회</span>
+                            </div>
+                            <button onclick="adjustValue('input-enk-charges', 1)" class="adjust-btn flex-none text-left">+</button>
                         </div>
                     </div>
-                    <div class="flex flex-col gap-3 text-left">
-                        <label class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none text-left">정산 방식 안내</label>
-                        <div id="hard-note-area" class="p-3 lg:p-4 bg-red-950/10 border border-red-900/20 rounded-xl h-[55px] lg:h-[60px] flex items-center transition-all-200 overflow-hidden leading-none text-left">
-                            <p class="text-[11px] lg:text-xs text-neutral-400 leading-tight italic">
-                                <span class="text-red-700 font-bold uppercase mr-1 text-left">Note:</span> <span id="note-text" class="text-neutral-400">정산 안내가 표시됩니다.</span>
-                            </p>
+
+                    <!-- 동적 토글 영역 -->
+                    <div id="dynamic-toggle-area">
+                        <div id="hard-mode-setting" class="flex flex-col gap-3 text-left">
+                            <label class="flex items-center gap-4 cursor-pointer group leading-none text-xs lg:text-sm font-black transition-colors text-neutral-500 group-hover:text-neutral-300 uppercase tracking-widest text-left">
+                                <input type="checkbox" id="input-is-hard" class="w-5 h-5 accent-red-600 bg-neutral-800 border-neutral-700 rounded cursor-pointer">
+                                <span id="hard-label">주간 보상 하드 모드 수령</span>
+                            </label>
+                            <div class="flex gap-2 h-[55px] lg:h-[60px]">
+                                <button id="btn-bulk" class="flex-1 flex flex-col justify-center items-center rounded-xl border-2 border-neutral-800 bg-neutral-950 transition-all-200 leading-none cursor-pointer">
+                                    <span id="bulk-text" class="text-xs lg:text-sm font-black uppercase text-neutral-500 transition-all-200 text-left">3회분 일괄 수령</span>
+                                    <span class="text-[9px] lg:text-[10px] text-zinc-600 font-bold italic mt-1 uppercase tracking-tighter text-left">하드 1판 소모</span>
+                                </button>
+                                <button id="btn-each" class="flex-1 flex flex-col justify-center items-center rounded-xl border-2 border-neutral-800 bg-neutral-950 transition-all-200 leading-none cursor-pointer">
+                                    <span id="each-text" class="text-xs lg:text-sm font-black uppercase text-neutral-500 transition-all-200 text-left">각각 수령 (3회)</span>
+                                    <span class="text-[9px] lg:text-[10px] text-zinc-600 font-bold italic mt-1 uppercase tracking-tighter text-left text-left">하드 3판 소모</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="billing-mode-setting" class="hidden flex flex-col gap-3 text-left text-left">
+                            <label id="first-bonus-label" class="flex items-center gap-4 cursor-pointer group leading-none text-xs lg:text-sm font-black transition-all-200 uppercase tracking-widest text-neutral-500 text-left">
+                                <input type="checkbox" id="input-is-first" class="w-5 h-5 accent-orange-600 bg-neutral-800 border-neutral-700 rounded cursor-pointer">
+                                <span>상점 초회 보너스 생존</span>
+                            </label>
+                            <div id="first-bonus-badge" class="cursor-pointer flex items-center justify-center bg-neutral-800/40 border-2 border-neutral-700/30 rounded-xl h-[55px] lg:h-[60px] transition-all-200 hover:border-orange-500/50">
+                                <span class="text-[11px] lg:text-xs font-black uppercase tracking-widest text-neutral-500">First Purchase Logic</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-3 text-left text-left">
+                        <div id="note-area-standard" class="flex flex-col gap-3 text-left">
+                            <label class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none text-left">정산 방식 안내</label>
+                            <div class="p-3 lg:p-4 bg-red-950/10 border border-red-900/20 rounded-xl h-[55px] lg:h-[60px] flex items-center overflow-hidden leading-none text-left">
+                                <p class="text-[10px] lg:text-xs text-neutral-400 leading-tight italic">
+                                    <span class="text-red-700 font-bold uppercase mr-1">Note:</span> <span id="note-text">정산 방식 안내 표시...</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div id="note-area-billing" class="hidden flex flex-col gap-3">
+                            <label class="text-xs font-black text-neutral-500 uppercase tracking-widest leading-none text-left text-left">추천 전략 필터</label>
+                            <div class="flex gap-2 h-[55px] lg:h-[60px]">
+                                <button id="btn-strat-cost" class="flex-1 flex flex-col justify-center items-center rounded-xl border-2 border-neutral-800 bg-neutral-950 transition-all-200 leading-none">
+                                    <span class="text-[11px] lg:text-[13px] font-black uppercase text-neutral-500 transition-colors">최소 금액 우선</span>
+                                    <span class="text-[8px] lg:text-[9px] text-zinc-600 font-bold mt-1 uppercase tracking-tighter text-left">결제액 최소</span>
+                                </button>
+                                <button id="btn-strat-eff" class="flex-1 flex flex-col justify-center items-center rounded-xl border-2 border-neutral-800 bg-neutral-950 transition-all-200 leading-none">
+                                    <span class="text-[11px] lg:text-[13px] font-black uppercase text-neutral-500 transition-colors">가성비 우선</span>
+                                    <span class="text-[8px] lg:text-[9px] text-zinc-600 font-bold mt-1 uppercase tracking-tighter text-left">단가 최저</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- 탭 1: 효율 분석 (1:1:1 고정 그리드) -->
-            <div id="content-eff" class="tab-content active lg:grid-cols-3 gap-4 lg:gap-6 items-stretch">
-                <!-- 1. 일일 거던 빈도 -->
+            <!-- 탭 1: 정가 주기 계산 -->
+            <div id="content-cycle" class="tab-content active lg:grid-cols-3 gap-4 lg:gap-6 items-stretch">
                 <section class="min-w-0">
-                    <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 lg:p-8 shadow-2xl relative overflow-hidden h-full flex flex-col">
+                    <div class="bg-neutral-900 border border-neutral-800 rounded-xl p-5 lg:p-8 shadow-2xl relative overflow-hidden h-full flex flex-col text-left">
                         <div id="alert-area-eff" class="min-h-[45px] mb-4 flex flex-col justify-center text-center"></div>
-                        <div class="flex-1 flex flex-col gap-6">
-                            <div class="flex flex-col lg:flex-row items-center gap-6 text-left">
+                        <div class="flex-1 flex flex-col gap-6 text-left">
+                            <div class="flex flex-col lg:flex-row items-center gap-6 text-left text-left">
                                 <div class="hidden lg:flex flex-col items-center gap-3">
                                     <button onclick="adjustValue('input-daily-runs-v', 1)" class="adjust-btn w-10 h-10 bg-neutral-800 border border-neutral-700 rounded-lg text-white font-bold hover:bg-red-900 transition-colors text-xl">+</button>
                                     <input type="range" id="input-daily-runs-v" min="1" max="15" step="1" value="3" class="slider-vertical accent-red-700">
@@ -152,199 +201,278 @@
                                         <button onclick="adjustValue('input-daily-runs-m', 1)" class="adjust-btn h-8 w-8 text-xs flex-none">+</button>
                                     </div>
                                     <div class="bg-black/50 p-3 lg:p-4 rounded-xl border border-neutral-800 flex justify-between items-center shadow-inner leading-none text-left text-left">
-                                        <span class="text-xs font-black text-neutral-500 uppercase tracking-widest">일일 소모</span>
-                                        <div id="display-module-cost-eff" class="text-neutral-200 font-bold text-sm lg:text-base leading-none text-right"><span class="text-white font-black">15</span>모듈 <span class="text-xs ml-1 text-neutral-600 font-normal tracking-widest">(300 ENK)</span></div>
+                                        <span class="text-xs font-black text-neutral-500 uppercase tracking-widest text-left">일일 소모</span>
+                                        <div id="display-module-cost-eff" class="text-neutral-200 font-bold text-sm lg:text-base leading-none text-right"><span class="text-white font-black text-left text-left text-left text-left">15</span>모듈 <span class="text-xs ml-1 text-neutral-600 font-normal tracking-widest text-left text-left text-left">(300 ENK)</span></div>
                                     </div>
-                                    <p id="display-available-modules-eff" class="text-[10px] lg:text-xs text-neutral-300 font-black tracking-tight text-right mt-2 drop-shadow-sm leading-none">매일 24개 수급 가능</p>
+                                    <p id="display-available-modules-eff" class="text-[10px] lg:text-xs text-neutral-300 font-black tracking-tight text-right mt-2 drop-shadow-sm leading-none text-right">매일 24개 수급 가능</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </section>
-                <!-- 2. 주간 가동 분석 -->
-                <section class="min-w-0 text-left">
+                <section class="min-w-0 text-left text-left">
                     <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full text-left">
-                        <div class="flex items-center gap-3 mb-6 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left"><div class="w-1.5 h-4 bg-red-700"></div>주간 가동 분석</div>
-                        <div class="mb-6 p-4 bg-black/60 rounded-xl border border-neutral-800 text-xs space-y-3 font-mono flex-1 flex flex-col justify-center">
+                        <div class="flex items-center gap-3 mb-6 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left text-left text-left"><div class="w-1.5 h-4 bg-red-700 text-left text-left text-left text-left"></div>주간 가동 분석</div>
+                        <div class="mb-6 p-4 bg-black/60 rounded-xl border border-neutral-800 text-xs space-y-3 font-mono flex-1 flex flex-col justify-center text-left text-left text-left text-left">
                             <div class="flex justify-between items-center text-sm leading-none"><span>보너스 정산</span><span id="res-bonus-runs" class="text-red-500 font-bold">3회</span></div>
-                            <div class="flex justify-between items-center text-sm leading-none text-left"><span>일반 정산</span><span id="res-normal-runs" class="text-neutral-300 font-bold text-left">18회</span></div>
-                            <div class="pt-3 border-t border-neutral-800 flex justify-between font-black uppercase tracking-tighter text-sm leading-none text-left"><span>주간 가동 총합</span><span id="res-total-runs" class="text-white underline underline-offset-4 decoration-red-900 font-black text-left">21회</span></div>
+                            <div class="flex justify-between items-center text-sm leading-none text-left text-left text-left text-left"><span>일반 정산</span><span id="res-normal-runs" class="text-neutral-300 font-bold text-left text-left">18회</span></div>
+                            <div class="pt-3 border-t border-neutral-800 flex justify-between font-black uppercase tracking-tighter text-sm leading-none text-left text-left text-left text-left text-left"><span>주간 가동 총합</span><span id="res-total-runs" class="text-white underline underline-offset-4 decoration-red-900 font-black text-left text-left">21회</span></div>
                         </div>
                         <div class="space-y-4 text-left leading-none text-left">
-                            <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left text-left">주간 합산 레벨</span><span class="text-2xl lg:text-3xl font-black text-white text-left"><span id="res-floored-levels">67</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left">LV</small></span></div>
-                            <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left text-left">파편 상자 수급</span><span class="text-2xl lg:text-3xl font-black text-red-600 text-left text-left"><span id="res-total-boxes-num">201</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left">ea</small></span></div>
-                            <div class="flex justify-between items-end pt-1 text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-sm lg:text-base text-left">파편 수급 기대값</span><span class="text-2xl lg:text-3xl font-black text-yellow-500 tracking-tight font-sans text-left"><span id="res-total-shards-num">402</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left">ea</small></span></div>
+                            <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left text-left text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left">주간 합산 레벨</span><span class="text-2xl lg:text-3xl font-black text-white text-left text-left text-left text-left text-left text-left"><span id="res-floored-levels">67</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left text-left">LV</small></span></div>
+                            <div class="flex justify-between items-end border-b border-neutral-800 pb-3 text-left text-left text-left text-left text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-left text-left text-left text-left">파편 상자 수급</span><span class="text-2xl lg:text-3xl font-black text-red-600 text-left text-left text-left text-left text-left text-left text-left text-left"><span id="res-total-boxes-num">201</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left text-left text-left">ea</small></span></div>
+                            <div class="flex justify-between items-end pt-1 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><span class="text-xs font-black text-neutral-500 uppercase tracking-widest mb-1 text-sm lg:text-base text-left text-left text-left text-left">파편 수급 기대값</span><span class="text-2xl lg:text-3xl font-black text-yellow-500 tracking-tight font-sans text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><span id="res-total-shards-num">402</span><small class="text-xs font-normal ml-1 uppercase font-sans text-left text-left text-left">ea</small></span></div>
                         </div>
                     </article>
                 </section>
-                <!-- 3. 정가 주기 -->
                 <section class="min-w-0">
-                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full justify-center text-center">
-                        <div class="flex flex-col items-center py-4 flex-1 justify-center text-center">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full justify-center text-center text-center text-center text-center text-center">
+                        <div class="flex flex-col items-center py-4 flex-1 justify-center text-center text-center text-center text-center text-center">
                             <div class="space-y-2 text-center w-full">
-                                <p class="text-xs lg:text-sm text-neutral-500 uppercase font-black tracking-widest leading-none text-center">정가 주기</p>
-                                <p class="text-[8px] lg:text-[9px] text-neutral-600 italic leading-tight font-bold text-center block w-full break-keep opacity-80">
+                                <p class="text-xs lg:text-sm text-neutral-500 uppercase font-black tracking-widest leading-none text-center text-center text-center text-center text-center">정가 주기</p>
+                                <p class="text-[8px] lg:text-[9px] text-neutral-600 italic leading-tight font-bold text-center block w-full break-keep opacity-80 text-center text-center text-center text-center text-center text-center text-center text-center text-center">
                                     * 추출 파편 및 랜덤 상자 미고려<br>(실제 가동 횟수는 더 적을 수 있음)
                                 </p>
-                                <div class="text-neutral-200 font-bold text-base leading-none text-center">약 <span id="res-days-needed" class="text-red-500 text-4xl lg:text-5xl font-black underline underline-offset-8 decoration-red-800 leading-none text-center">7.0</span>일 마다</div>
-                                <p class="text-xs lg:text-sm text-neutral-400 font-black uppercase tracking-widest text-center leading-none">인격/에고 1개 정가 가능</p>
+                                <div class="text-neutral-200 font-bold text-base leading-none text-center text-center text-center">약 <span id="res-days-needed" class="text-red-500 text-4xl lg:text-5xl font-black underline underline-offset-8 decoration-red-800 leading-none text-center text-center text-center text-center text-center text-center">7.0</span>일 마다</div>
+                                <p class="text-xs lg:text-sm text-neutral-400 font-black uppercase tracking-widest text-center leading-none text-center text-center text-center text-center">인격/에고 1개 정가 가능</p>
                             </div>
-                            <div class="w-full border-t border-neutral-800 pt-8 space-y-4 text-center text-center"><p class="text-xs lg:text-sm text-neutral-500 font-black uppercase tracking-widest leading-none text-center">주간 정산 결과</p><div class="text-5xl lg:text-7xl font-black text-white tracking-tighter leading-none text-center text-center text-center text-center"><span id="res-identity-count">1.01</span> <small class="text-xl text-neutral-600 font-normal ml-1 uppercase italic font-sans text-center">개</small></div><p class="text-[11px] text-neutral-500 font-bold uppercase tracking-tighter leading-none text-center">주간 획득 인격/에고 개수</p></div>
+                            <div class="w-full border-t border-neutral-800 pt-8 space-y-4 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center"><p class="text-xs lg:text-sm text-neutral-500 font-black uppercase tracking-widest leading-none text-center text-center text-center text-center">주간 정산 결과</p><div class="text-5xl lg:text-7xl font-black text-white tracking-tighter leading-none text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center"><span id="res-identity-count">1.01</span> <small class="text-xl text-neutral-600 font-normal ml-1 uppercase italic font-sans text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">개</small></div><p class="text-[11px] text-neutral-500 font-bold uppercase tracking-tighter leading-none text-center text-center text-center text-center">주간 획득 인격/에고 개수</p></div>
                         </div>
                     </article>
                 </section>
             </div>
 
-            <!-- 탭 2: 목표 달성 -->
-            <div id="content-target" class="tab-content hidden">
-                <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 items-stretch text-left">
-                    <!-- 1. 목표 설정 -->
-                    <section class="w-full lg:w-[210px] lg:flex-none text-left text-left">
-                        <article class="bg-neutral-900 border border-neutral-800 border-t-4 border-t-orange-500 rounded-xl p-4 shadow-2xl h-full flex flex-col text-left">
-                            <div class="min-h-[30px] mb-3 flex flex-col justify-center text-xs font-black text-orange-400 uppercase tracking-widest leading-tight text-left">목표 정보 활성화</div>
-                            <div class="flex flex-col gap-4 text-left flex-1 justify-center">
-                                <div class="flex flex-col gap-1.5 group text-left">
-                                    <label for="input-target-date" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left">정가 마감일</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none">Edit</span></label>
-                                    <div class="input-box-container px-2 focus-within:border-red-700 text-left"><input type="date" id="input-target-date" class="bg-transparent w-full text-white font-black outline-none cursor-pointer text-sm text-left"></div>
-                                </div>
-                                <div class="flex flex-col gap-1.5 group text-left text-left">
-                                    <label for="input-current-boxes" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left">보유 파편 상자</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none">Edit</span></label>
-                                    <div class="flex items-center gap-1 text-left text-left">
-                                        <button onclick="adjustValue('input-current-boxes', -1)" class="adjust-btn flex-none">-</button>
-                                        <div class="input-box-container flex-1">
-                                            <input type="number" id="input-current-boxes" value="0" min="0" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right text-right">
-                                            <span class="input-unit text-yellow-600 text-right">개</span>
-                                        </div>
-                                        <button onclick="adjustValue('input-current-boxes', 1)" class="adjust-btn flex-none text-left">+</button>
+            <!-- 탭 2: 파편 모으기 -->
+            <div id="content-shard" class="tab-content hidden lg:grid-cols-3 gap-4 lg:gap-6 items-stretch text-left">
+                <section class="min-w-0">
+                    <article class="bg-neutral-900 border border-neutral-800 border-t-4 border-t-orange-500 rounded-xl p-5 shadow-2xl h-full flex flex-col text-left">
+                        <div class="min-h-[30px] mb-4 flex flex-col justify-center text-xs font-black text-orange-400 uppercase tracking-widest leading-tight text-left text-left text-left text-left text-left text-left text-left text-left">목표 정보 활성화</div>
+                        <div class="flex flex-col gap-6 text-left flex-1 justify-center text-left text-left text-left text-left">
+                            <div class="flex flex-col gap-2 group text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <label for="input-target-date" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left text-left">정가 마감일</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none text-left text-left text-left text-left text-left text-left text-left text-left">Edit</span></label>
+                                <div class="input-box-container px-2 focus-within:border-red-700 text-left text-left text-left text-left text-left text-left text-left text-left text-left"><input type="date" id="input-target-date" class="bg-transparent w-full text-white font-black outline-none cursor-pointer text-sm text-left"></div>
+                            </div>
+                            <div class="flex flex-col gap-2 group text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <label for="input-current-boxes" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left text-left text-left text-left">보유 파편 상자</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none text-left text-left text-left text-left text-left text-left text-left text-left">Edit</span></label>
+                                <div class="flex items-center gap-1 text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                    <button onclick="adjustValue('input-current-boxes', -1)" class="adjust-btn flex-none text-left text-left text-left">-</button>
+                                    <div class="input-box-container flex-1">
+                                        <input type="number" id="input-current-boxes" value="0" min="0" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right text-right text-right text-right text-right text-right">
+                                        <span class="input-unit text-yellow-600 text-right text-right text-right text-right text-right text-right text-right text-right text-right text-right">개</span>
                                     </div>
-                                </div>
-                                <div class="flex flex-col gap-1.5 group text-left text-left">
-                                    <label for="input-target-ids" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left"><span class="text-xs font-black text-neutral-400 uppercase tracking-widest text-left text-left">목표 정가 개수</span><span class="bg-red-700 text-[8px] px-1.5 py-0.5 rounded text-white font-bold animate-pulse uppercase leading-none text-left">Edit</span></label>
-                                    <div class="flex items-center gap-1 text-left text-left">
-                                        <button onclick="adjustValue('input-target-ids', -1)" class="adjust-btn flex-none text-left">-</button>
-                                        <div class="input-box-container flex-1 text-left">
-                                            <input type="number" id="input-target-ids" value="1" min="1" max="100" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right text-right">
-                                            <span class="input-unit text-red-700 text-right">개</span>
-                                        </div>
-                                        <button onclick="adjustValue('input-target-ids', 1)" class="adjust-btn flex-none text-left">+</button>
-                                    </div>
+                                    <button onclick="adjustValue('input-current-boxes', 1)" class="adjust-btn flex-none text-left text-left text-left text-left text-left">+</button>
                                 </div>
                             </div>
-                        </article>
-                    </section>
-                    <!-- 2. 결과 가동 횟수 -->
-                    <section class="w-full lg:flex-[1.1] text-left text-left">
-                        <article class="bg-neutral-900 border border-neutral-800 p-5 lg:p-6 flex flex-col rounded-xl shadow-lg border-t-4 border-t-red-700 h-full justify-center text-center">
-                            <h3 class="font-black text-red-600 text-xs lg:text-sm uppercase tracking-[0.2em] mb-6 italic leading-none text-center">일일 필요 거던 가동 횟수</h3>
-                            <p class="text-[11px] lg:text-xs text-neutral-400 uppercase mb-4 font-black leading-tight text-center">목표 달성을 위한 일일 평균 최소 횟수</p>
-                            <div class="mb-6 flex items-baseline justify-center gap-2">
-                                <span id="res-target-daily-runs-main" class="text-7xl lg:text-8xl font-black text-white tracking-tighter leading-none text-center">0.0</span>
-                                <span class="text-red-700 font-black text-2xl lg:text-4xl italic uppercase text-center">회</span>
+                            <div class="flex flex-col gap-2 group text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <label for="input-target-ids" class="flex items-center gap-1.5 leading-none cursor-pointer text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">목표 정가 개수</label>
+                                <div class="flex items-center gap-1 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                    <button onclick="adjustValue('input-target-ids', -1)" class="adjust-btn flex-none text-left text-left text-left text-left text-left text-left text-left text-left">-</button>
+                                    <div class="input-box-container flex-1">
+                                        <input type="number" id="input-target-ids" value="1" min="1" max="100" inputmode="numeric" pattern="[0-9]*" onfocus="this.select()" class="input-field pr-8 text-right text-right text-right text-right text-right text-right text-right">
+                                        <span class="input-unit text-red-700 text-right text-right text-right text-right text-right text-right text-right text-right text-right text-right text-right text-right text-right">개</span>
+                                    </div>
+                                    <button onclick="adjustValue('input-target-ids', 1)" class="adjust-btn flex-none text-left text-left text-left text-left text-left">+</button>
+                                </div>
                             </div>
-                            <div id="res-target-summary" class="bg-black/40 p-4 lg:p-5 rounded-xl border border-neutral-800 text-xs lg:text-sm text-neutral-400 font-mono leading-relaxed text-center">오늘부터 <span class="text-white underline decoration-red-900 font-black text-left">0</span>일 남았습니다.<br>총 <span class="text-white underline decoration-red-900 font-black text-left text-left text-left text-left">0</span>회의 추가 거던 클리어 필요</div>
-                        </article>
-                    </section>
-                    <!-- 3. 판별 배지 -->
-                    <section class="w-full lg:flex-[1.6] text-left text-left">
-                        <article id="feasibility-card" class="bg-neutral-900 border border-neutral-800 border-t-4 border-t-green-600 p-5 lg:p-6 flex flex-col rounded-xl shadow-lg h-full justify-center text-center relative transition-all-200">
-                            <div class="flex items-center justify-center gap-2 mb-4 italic leading-none text-center text-center">
-                                <h3 class="font-black text-green-500 text-xs lg:text-sm uppercase tracking-[0.2em] text-center">가동 가능 여부 판별</h3>
-                                <div class="tooltip-container" id="tooltip-trigger">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="text-neutral-500 hover:text-white cursor-pointer transition-colors text-center text-center" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-                                    <div class="tooltip-box text-left text-left text-left text-left">
-                                        <div class="space-y-3 text-left text-left text-left text-left">
-                                            <div class="text-left text-left text-left text-left">
-                                                <p class="text-green-500 font-black text-[11px] uppercase mb-1 text-left text-left">안정 가동 범위</p>
-                                                <p class="text-[10px] text-neutral-400 leading-normal text-left text-left text-left text-left">매일 경던 1회, 끈던 3회 수행을 위한 모듈 9개를 남기는 보수적인 기준입니다.</p>
-                                            </div>
-                                            <div class="border-t border-neutral-800 pt-3 text-left text-left text-left">
-                                                <p class="text-red-500 font-black text-[11px] uppercase mb-1 text-left text-left">최대 가동 한계</p>
-                                                <p class="text-[10px] text-neutral-400 leading-normal text-left text-left text-left text-left">일일 퀘스트 수행(경던 1회 + 끈던 1회 = 모듈 5)만 남기고 <span class="text-white text-left text-left text-left text-left">모든 엔케팔린을 거던에 쏟아붓는</span> 극한의 기준입니다.</p>
-                                            </div>
+                        </div>
+                    </article>
+                </section>
+                <section class="min-w-0 text-left">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg border-t-4 border-t-red-700 h-full justify-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                        <h3 class="font-black text-red-600 text-xs lg:text-sm uppercase tracking-[0.2em] mb-6 italic leading-none text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">일일 필요 거던 가동 횟수</h3>
+                        <p class="text-[11px] lg:text-xs text-neutral-400 uppercase mb-4 font-black leading-tight text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">목표 달성을 위한 일일 평균 최소 횟수</p>
+                        <div class="mb-6 flex items-baseline justify-center gap-2 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                            <span id="res-target-daily-runs-main" class="text-7xl lg:text-8xl font-black text-white tracking-tighter leading-none text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">0.0</span>
+                            <span class="text-red-700 font-black text-2xl lg:text-4xl italic uppercase text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">회</span>
+                        </div>
+                        <div id="res-target-summary" class="bg-black/40 p-4 lg:p-5 rounded-xl border border-neutral-800 text-xs lg:text-sm text-neutral-400 font-mono leading-relaxed text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">오늘부터 <span class="text-white underline decoration-red-900 font-black text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">0</span>일 남았습니다.<br>총 <span class="text-white underline decoration-red-900 font-black text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">0</span>회의 추가 거던 클리어 필요</div>
+                    </article>
+                </section>
+                <section class="min-w-0 text-left">
+                    <article id="feasibility-card" class="bg-neutral-900 border border-neutral-800 border-t-4 border-t-green-600 p-5 lg:p-6 flex flex-col rounded-xl shadow-lg h-full justify-center text-center relative transition-all-200 text-center text-center text-center text-center text-center">
+                        <div class="flex items-center justify-center gap-2 mb-4 italic leading-none text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                            <h3 class="font-black text-green-500 text-xs lg:text-sm uppercase tracking-[0.2em] text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">가동 가능 여부 판별</h3>
+                            <div class="tooltip-container" id="tooltip-trigger">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="text-neutral-500 hover:text-white cursor-pointer transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                <div class="tooltip-box text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                    <div class="space-y-3 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                        <div class="text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                            <p class="text-green-500 font-black text-[11px] uppercase mb-1 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">안정 가동 범위</p>
+                                            <p class="text-[10px] text-neutral-400 leading-normal text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">매일 경던 1회, 끈던 3회 수행을 위한 모듈 9개를 남기는 보수적인 기준입니다.</p>
+                                        </div>
+                                        <div class="border-t border-neutral-800 pt-3 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                            <p class="text-red-500 font-black text-[11px] uppercase mb-1 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">최대 가동 한계</p>
+                                            <p class="text-[10px] text-neutral-400 leading-normal text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">일일 퀘스트 수행만 남기고 <span class="text-white text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">모든 엔케팔린을 거던에 쏟아붓는</span> 극한의 기준입니다.</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div id="feasibility-status-area" class="flex flex-col items-center gap-3 flex-1 justify-center text-center text-center">
-                                <div id="feasibility-badge" class="px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest mb-2 leading-none text-center">분석 중</div>
-                                <div id="feasibility-msg" class="text-lg lg:text-2xl font-black text-white leading-tight mb-2 text-center text-center">날짜를 입력하세요</div>
-                                
-                                <p class="text-[9px] lg:text-[10px] text-neutral-500 italic mb-4 opacity-80 leading-tight text-center block w-full px-4 break-keep">
-                                    * 추출 파편 및 랜덤 상자 보상에 의해 실제 가동 요구치는 줄어들 수 있습니다.
-                                </p>
+                        </div>
+                        <div id="feasibility-status-area" class="flex flex-col items-center gap-3 flex-1 justify-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                            <div id="feasibility-badge" class="px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest mb-2 leading-none text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">분석 중</div>
+                            <div id="feasibility-msg" class="text-lg lg:text-2xl font-black text-white leading-tight mb-2 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">날짜를 입력하세요</div>
+                            
+                            <p class="text-[9px] lg:text-[10px] text-neutral-500 italic mb-4 opacity-80 leading-tight text-center block w-full px-4 break-keep text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                                * 추출 파편 및 랜덤 상자 보상에 의해 실제 가동 요구치는 줄어들 수 있습니다.
+                            </p>
 
-                                <div class="w-full grid grid-cols-1 gap-4 text-center text-center text-center">
-                                    <div class="bg-black/50 p-4 rounded-xl border border-neutral-800 text-center text-center text-center text-center">
-                                        <p class="text-[10px] lg:text-xs text-neutral-500 font-black uppercase mb-1.5 leading-none tracking-tighter text-center text-center">안정 가동 범위 (일일 잔여 모듈 9+)</p>
-                                        <div id="safe-limit-info" class="text-sm lg:text-lg text-neutral-200 font-bold leading-tight text-center text-center text-center text-center">분석 대기 중...</div>
-                                    </div>
-                                    <div class="bg-red-950/10 p-4 rounded-xl border border-red-900/20 text-center text-center text-center text-center">
-                                        <p class="text-[10px] lg:text-xs text-red-800 font-black uppercase mb-1.5 leading-none tracking-tighter text-center text-center">최대 가동 한계 (일일 잔여 모듈 5)</p>
-                                        <div id="max-limit-info" class="text-sm lg:text-lg text-red-100 font-bold leading-tight text-center text-center text-center text-center">분석 대기 중...</div>
-                                    </div>
+                            <div class="w-full grid grid-cols-1 gap-4 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                                <div class="bg-black/50 p-4 rounded-xl border border-neutral-800 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                                    <p class="text-[10px] lg:text-xs text-neutral-500 font-black uppercase mb-1.5 leading-none tracking-tighter text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">안정 가동 범위 (일일 잔여 모듈 9+)</p>
+                                    <div id="safe-limit-info" class="text-sm lg:text-lg text-neutral-200 font-bold leading-tight text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">분석 대기 중...</div>
+                                </div>
+                                <div class="bg-red-950/10 p-4 rounded-xl border border-red-900/20 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                                    <p class="text-[10px] lg:text-xs text-red-800 font-black uppercase mb-1.5 leading-none tracking-tighter text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">최대 가동 한계 (일일 잔여 모듈 5)</p>
+                                    <div id="max-limit-info" class="text-sm lg:text-lg text-red-100 font-bold leading-tight text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">분석 대기 중...</div>
                                 </div>
                             </div>
-                        </article>
-                    </section>
-                </div>
+                        </div>
+                    </article>
+                </section>
+            </div>
+
+            <!-- 탭 3: 충전용 과금 -->
+            <div id="content-billing" class="tab-content hidden lg:grid-cols-3 gap-4 lg:gap-6 items-stretch text-left">
+                <section class="min-w-0 text-left text-left">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full text-left border-t-4 border-t-yellow-600 text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center gap-2 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <span>최적 상품 추천 조합</span>
+                                <!-- Tooltip Start -->
+                                <div class="tooltip-container relative" id="billing-tooltip-trigger">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" class="text-neutral-500 hover:text-yellow-500 cursor-pointer transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                    <!-- Tooltip Box: Mobile gets fixed centering via CSS, Desktop gets absolute positioning via Tailwind classes -->
+                                    <div class="tooltip-box md:bottom-full md:left-1/2 md:-translate-x-1/2 md:mb-2 md:w-64">
+                                        <p class="text-[11px] text-yellow-100 leading-relaxed break-keep font-bold">
+                                            <span class="text-yellow-500 block mb-1">💡 레벨업 변수 안내</span>
+                                            관리자 레벨 상승 시 엔케팔린이 최대치만큼 회복되므로, 실제 과금 필요량은 이 계산 결과보다 적을 수 있습니다.
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- Tooltip End -->
+                            </div>
+                            <div id="billing-total-price" class="text-orange-500 font-black text-sm lg:text-lg text-left text-left text-left text-left text-left text-left text-left">0원</div>
+                        </div>
+                        <div id="recommendation-list" class="flex-1 flex flex-col gap-3 overflow-y-auto max-h-[450px] lg:max-h-none text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                            <!-- JS 영역 -->
+                        </div>
+                    </article>
+                </section>
+                <section class="min-w-0 text-left text-left">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full text-left border-t-4 border-t-blue-600 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                        <div class="flex items-center gap-3 mb-6 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">충전량 통계 리포트</div>
+                        <div class="flex-1 flex flex-col justify-center gap-6 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                            <div class="flex justify-between items-center border-b border-neutral-800 pb-3 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <span class="text-xs text-neutral-500 w-36 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">일일 필요 광기</span>
+                                <span id="stat-daily-lunacy" class="font-black text-blue-500 text-lg lg:text-xl text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">--</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-neutral-800 pb-3 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <span class="text-xs text-neutral-500 w-36 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">일일 충전 엔케</span>
+                                <span id="stat-daily-enk" class="font-black text-blue-400 text-lg lg:text-xl text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">--</span>
+                            </div>
+                            <div class="flex justify-between items-center pt-2 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <span class="text-xs text-neutral-500 w-36 text-left font-bold text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">월간 추가 필요분</span>
+                                <span id="stat-net-deficit" class="font-black text-white text-lg lg:text-xl italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">--</span>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+                <section class="min-w-0 text-left text-left text-left text-left">
+                    <article class="bg-neutral-900 border border-neutral-800 p-6 flex flex-col rounded-xl shadow-lg h-full justify-center border-t-4 border-t-red-700 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                        <div class="flex items-center gap-3 mb-6 font-black text-neutral-500 text-xs uppercase tracking-widest italic text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">구매 전략</div>
+                        <div id="billing-runner-msg-area" class="flex-1 flex flex-col justify-center items-center gap-4 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+                            <div id="rec-runner-msg" class="text-sm lg:text-base font-black text-neutral-300 italic opacity-80 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">--</div>
+                            <div id="box-reduction-info" class="hidden bg-blue-950/20 border border-blue-900/40 p-3 rounded-lg w-full text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                                <p class="text-[10px] text-blue-300 font-bold mb-1 uppercase tracking-tighter">Enk. Package Impact</p>
+                                <p id="box-reduction-text" class="text-[11px] text-neutral-400 leading-snug">--</p>
+                            </div>
+                            <p class="text-[10px] text-neutral-500 text-center leading-relaxed text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">월간 광기 수급량 대비 최적의 결제 경로입니다.</p>
+                        </div>
+                    </article>
+                </section>
             </div>
             
-            <!-- 모바일 전용 하단 토글 -->
-            <div class="lg:hidden mt-4 flex justify-center pb-8 text-left">
-                <nav class="flex bg-neutral-900 p-1 rounded-lg tab-highlight relative">
-                    <button onclick="switchTab('eff')" id="tab-btn-eff-bottom" class="relative px-6 py-2.5 text-xs font-black rounded-md transition-all-200 bg-red-800 text-white z-10">효율 분석</button>
-                    <button onclick="switchTab('target')" id="tab-btn-target-bottom" class="relative px-6 py-2.5 text-xs font-black rounded-md transition-all-200 text-neutral-500 hover:text-neutral-300 z-10 flex items-center gap-1">
-                        목표 달성 <span id="arrow-bottom" class="move-arrow text-red-500 font-black">»</span>
+            <div class="lg:hidden mt-4 flex justify-center pb-8 text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left text-left">
+                <nav class="flex bg-neutral-900 p-1 rounded-lg tab-highlight mx-auto relative text-left text-left text-left text-left text-left text-left text-left">
+                    <button onclick="switchTab('cycle')" id="tab-btn-cycle-bottom" class="relative px-3 py-2.5 text-[9.5px] font-black rounded-md transition-all-200 bg-red-800 text-white z-10 whitespace-nowrap tracking-tighter">정가 주기</button>
+                    <button onclick="switchTab('shard')" id="tab-btn-shard-bottom" class="relative px-3 py-2.5 text-[9.5px] font-black rounded-md transition-all-200 text-neutral-500 z-10 flex items-center gap-1 whitespace-nowrap tracking-tighter text-left text-left text-left text-left">
+                        파편 모으기 <span id="arrow-shard-bottom" class="move-arrow text-red-500 font-black text-left text-left text-left">»</span>
+                    </button>
+                    <button onclick="switchTab('billing')" id="tab-btn-billing-bottom" class="relative px-3 py-2.5 text-[9.5px] font-black rounded-md transition-all-200 text-neutral-500 z-10 flex items-center gap-1 whitespace-nowrap tracking-tighter text-left text-left text-left text-left text-left text-left text-left text-left">
+                        충전용 과금 <span id="arrow-billing-bottom" class="move-arrow text-red-500 font-black text-left text-left text-left text-left text-left text-left text-left text-left">»</span>
                     </button>
                 </nav>
             </div>
         </main>
         
-        <footer class="mt-8 lg:mt-20 text-center border-t border-neutral-900 pt-10 mb-10 text-center text-center text-center">
-            <p class="text-[10px] text-zinc-800 uppercase tracking-[0.6em] font-black italic opacity-40 text-center">Authorized Intelligence Unit - Sazabi Custom</p>
+        <footer class="mt-8 lg:mt-20 text-center border-t border-neutral-900 pt-10 mb-10 text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">
+            <p class="text-[10px] text-zinc-800 uppercase tracking-[0.6em] font-black italic opacity-40 uppercase text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center text-center">Authorized Intelligence Unit - Sazabi Custom</p>
         </footer>
     </div>
 
     <script>
-        // 전역 함수 노출
-        window.switchTab = function(tab) {
-            const content_eff = document.getElementById('content-eff');
-            const content_target = document.getElementById('content-target');
+        // --- Billing Constants ---
+        const REFILL_COSTS = [0, 26, 78, 156, 260, 390, 546, 728, 936, 1170, 1430];
+        const NON_FIRST_RATIO = 0.1565; 
+        const BASE_MONTHLY_LUNACY = 3900; 
 
-            if(tab === 'eff') {
-                content_eff.classList.remove('hidden');
-                content_eff.classList.add('active');
-                content_target.classList.add('hidden');
-                content_target.classList.remove('active');
-            } else {
-                content_target.classList.remove('hidden');
-                content_target.classList.add('active');
-                content_eff.classList.add('hidden');
-                content_eff.classList.remove('active');
-            }
-            
+        const PRODUCTS = [
+            { id: 'weekly_box', name: '주간 엔케팔린 패키지', enk_fixed: 1200, price: 9900, type: 'weekly', limit: 4, detail: '20박스 (1200 ENK)' },
+            { id: 'raw_6', base: 8336, price: 110000, name: '광기 모음', type: 'raw' },
+            { id: 'raw_5', base: 4103, price: 55000, name: '광기 더미', type: 'raw' },
+            { id: 'raw_4', base: 2147, price: 33000, name: '광기 상자', type: 'raw' },
+            { id: 'raw_3', base: 1014, price: 17000, name: '광기 다발', type: 'raw' },
+            { id: 'raw_2', base: 294, price: 5100, name: '광기 묶음', type: 'raw' },
+            { id: 'raw_1', base: 70, price: 1100, name: '광기', type: 'raw' }
+        ];
+
+        // --- State Management ---
+        const STORAGE_KEYS = { DAILY_RUNS: 'lcb_remaster_dailyRuns', MAX_ENK: 'lcb_remaster_maxEnk', ENK_CHARGES: 'lcb_remaster_enkCharges', IS_HARD: 'lcb_remaster_isHard', HARD_STYLE: 'lcb_remaster_hardStyle', TARGET_DATE: 'lcb_remaster_targetDate', TARGET_IDS: 'lcb_remaster_targetIds', CURRENT_BOXES: 'lcb_remaster_currentBoxes', ACTIVE_TAB: 'lcb_remaster_activeTab', IS_FIRST: 'lcb_remaster_isFirst', BILL_STRAT: 'lcb_remaster_billStrat' };
+        function safeSave(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
+        function safeGet(key, defaultValue) { try { const val = localStorage.getItem(key); return val !== null ? val : defaultValue; } catch (e) { return defaultValue; } }
+
+        let dailyRuns = parseInt(safeGet(STORAGE_KEYS.DAILY_RUNS, "3"));
+        let maxEnk = parseInt(safeGet(STORAGE_KEYS.MAX_ENK, "120"));
+        let enkCharges = parseInt(safeGet(STORAGE_KEYS.ENK_CHARGES, "2"));
+        let isHard = safeGet(STORAGE_KEYS.IS_HARD, "false") === "true";
+        let isFirst = safeGet(STORAGE_KEYS.IS_FIRST, "true") === "true";
+        let hardStyle = safeGet(STORAGE_KEYS.HARD_STYLE, "bulk");
+        let activeTab = safeGet(STORAGE_KEYS.ACTIVE_TAB, "cycle");
+        let billStrat = safeGet(STORAGE_KEYS.BILL_STRAT, "cost");
+        
+        let targetIds = parseInt(safeGet(STORAGE_KEYS.TARGET_IDS, "1"));
+        let currentBoxes = parseInt(safeGet(STORAGE_KEYS.CURRENT_BOXES, "0"));
+        const dDate = new Date(); dDate.setDate(dDate.getDate() + 14);
+        let targetDate = safeGet(STORAGE_KEYS.TARGET_DATE, dDate.toISOString().split('T')[0]);
+
+        const BOXES_PER_LEVEL = 3; const SHARDS_PER_BOX = 2; const IDENTITY_COST = 400; const MD_NORMAL_LV = 3; const ENK_PER_MODULE = 20; const MODULE_PER_RUN = 5;
+
+        // --- Core Helpers ---
+        window.switchTab = function(tab) {
+            const tabs = ['cycle', 'shard', 'billing'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`content-${t}`);
+                if(el) { if(t === tab) { el.classList.remove('hidden'); el.classList.add('active'); } else { el.classList.add('hidden'); el.classList.remove('active'); } }
+            });
             const allBtns = document.querySelectorAll('nav button');
-            allBtns.forEach(b => {
-                b.classList.remove('bg-red-800', 'text-white');
-                b.classList.add('text-neutral-500');
+            allBtns.forEach(b => { b.classList.remove('bg-red-800', 'text-white'); b.classList.add('text-neutral-500'); });
+            const topB = document.getElementById(`tab-btn-${tab}-top`); if(topB) topB.classList.add('bg-red-800', 'text-white');
+            const botB = document.getElementById(`tab-btn-${tab}-bottom`); if(botB) botB.classList.add('bg-red-800', 'text-white');
+            
+            tabs.forEach(t => {
+                const topA = document.getElementById(`arrow-${t}-top`); const botA = document.getElementById(`arrow-${t}-bottom`);
+                if(t === tab) { if(topA) topA.style.display='none'; if(botA) botA.style.display='none'; }
+                else { if(topA) topA.style.display='inline-block'; if(botA) botA.style.display='inline-block'; }
             });
 
-            // 화살표 애니메이션 제어
-            const arrowTop = document.getElementById('arrow-top');
-            const arrowBottom = document.getElementById('arrow-bottom');
-            if(tab === 'eff') {
-                if(arrowTop) arrowTop.style.display = 'inline-block';
-                if(arrowBottom) arrowBottom.style.display = 'inline-block';
+            if(tab === 'billing') {
+                document.getElementById('hard-mode-setting').classList.add('hidden'); document.getElementById('billing-mode-setting').classList.remove('hidden');
+                document.getElementById('note-area-standard').classList.add('hidden'); document.getElementById('note-area-billing').classList.remove('hidden');
             } else {
-                if(arrowTop) arrowTop.style.display = 'none';
-                if(arrowBottom) arrowBottom.style.display = 'none';
+                document.getElementById('hard-mode-setting').classList.remove('hidden'); document.getElementById('billing-mode-setting').classList.add('hidden');
+                document.getElementById('note-area-standard').classList.remove('hidden'); document.getElementById('note-area-billing').classList.add('hidden');
             }
-
-            // 상단 및 하단 버튼 동기화
-            document.getElementById(`tab-btn-${tab}-top`).classList.add('bg-red-800', 'text-white');
-            const bottomBtn = document.getElementById(`tab-btn-${tab}-bottom`);
-            if(bottomBtn) bottomBtn.classList.add('bg-red-800', 'text-white');
-
+            safeSave(STORAGE_KEYS.ACTIVE_TAB, tab);
             window.scrollTo({ top: 0, behavior: 'smooth' });
             updateAll();
         };
@@ -359,154 +487,341 @@
             if(val < (parseInt(input.min) || 0)) val = parseInt(input.min) || 0;
             if(val > (parseInt(input.max) || 9999)) val = parseInt(input.max) || 9999;
             input.value = val;
-            
-            if(id === 'input-max-enk') maxEnk = val;
+            if(id === 'input-max-enk') { maxEnk = val; safeSave(STORAGE_KEYS.MAX_ENK, val); }
+            if(id === 'input-enk-charges') { enkCharges = val; safeSave(STORAGE_KEYS.ENK_CHARGES, val); }
             if(id === 'input-current-boxes') { currentBoxes = val; safeSave(STORAGE_KEYS.CURRENT_BOXES, val); }
             if(id === 'input-target-ids') { targetIds = val; safeSave(STORAGE_KEYS.TARGET_IDS, val); }
-            if(id.includes('daily-runs')) dailyRuns = val;
+            if(id.includes('daily-runs')) { dailyRuns = val; safeSave(STORAGE_KEYS.DAILY_RUNS, dailyRuns); }
             updateAll();
         };
-
-        const STORAGE_KEYS = { DAILY_RUNS: 'lcb_md_calc_dailyRuns', MAX_ENK: 'lcb_md_calc_maxEnk', IS_HARD: 'lcb_md_calc_isHard', HARD_STYLE: 'lcb_md_calc_hardStyle', TARGET_DATE: 'lcb_md_calc_targetDate', TARGET_IDS: 'lcb_md_calc_targetIds', CURRENT_BOXES: 'lcb_md_calc_currentBoxes' };
-        function safeSave(key, value) { try { localStorage.setItem(key, value); } catch (e) {} }
-        function safeGet(key, defaultValue) { try { const val = localStorage.getItem(key); return val !== null ? val : defaultValue; } catch (e) { return defaultValue; } }
-
-        let dailyRuns = parseInt(safeGet(STORAGE_KEYS.DAILY_RUNS, "3")) || 3;
-        let maxEnk = parseInt(safeGet(STORAGE_KEYS.MAX_ENK, "120")) || 120;
-        let isHard = safeGet(STORAGE_KEYS.IS_HARD, "false") === "true";
-        let hardStyle = safeGet(STORAGE_KEYS.HARD_STYLE, "bulk");
-        
-        // 목표 달성 탭 입력값 영구화
-        let targetIds = parseInt(safeGet(STORAGE_KEYS.TARGET_IDS, "1")) || 1;
-        let currentBoxes = parseInt(safeGet(STORAGE_KEYS.CURRENT_BOXES, "0")) || 0;
-        const dDate = new Date(); dDate.setDate(dDate.getDate() + 14);
-        let targetDate = safeGet(STORAGE_KEYS.TARGET_DATE, dDate.toISOString().split('T')[0]);
-
-        const BOXES_PER_LEVEL = 3; const SHARDS_PER_BOX = 2; const IDENTITY_COST = 400; const MD_NORMAL_LV = 3; const ENK_PER_MODULE = 20; const MODULE_PER_RUN = 5;
-
-        const elMaxEnkInput = document.getElementById('input-max-enk');
-        const elIsHardInput = document.getElementById('input-is-hard');
-        const elTargetIdsInput = document.getElementById('input-target-ids');
-        const elCurrentBoxesInput = document.getElementById('input-current-boxes');
-        const elTargetDateInput = document.getElementById('input-target-date');
-        const elBtnBulk = document.getElementById('btn-bulk');
-        const elBtnEach = document.getElementById('btn-each');
-        const elNoteText = document.getElementById('note-text');
-        const elDailyRunsM = document.getElementById('input-daily-runs-m');
-        const elDailyRunsV = document.getElementById('input-daily-runs-v');
-
-        if(elMaxEnkInput) elMaxEnkInput.value = maxEnk;
-        if(elIsHardInput) elIsHardInput.checked = isHard;
-        if(elTargetDateInput) elTargetDateInput.value = targetDate;
-        if(elTargetIdsInput) elTargetIdsInput.value = targetIds;
-        if(elCurrentBoxesInput) elCurrentBoxesInput.value = currentBoxes;
-        if(elDailyRunsM) elDailyRunsM.value = dailyRuns;
-        if(elDailyRunsV) elDailyRunsV.value = dailyRuns;
 
         function updateEffUI() {
             const weeklyRuns = dailyRuns * 7;
             const questLevels = 9;
             let mdBonusLevels = (isHard ? (hardStyle === 'bulk' ? 22.5 : 25) : 3 * 4.5);
             let bonusRunsCount = (isHard ? (hardStyle === 'bulk' ? 1 : 3) : Math.min(weeklyRuns, 3));
-            const mdNormalRuns = Math.max(0, weeklyRuns - bonusRunsCount);
-            const totalWeeklyLevels = questLevels + mdBonusLevels + (mdNormalRuns * MD_NORMAL_LV);
-            const flooredLevels = Math.floor(totalWeeklyLevels);
-            const weeklyShards = flooredLevels * BOXES_PER_LEVEL * SHARDS_PER_BOX;
-            const totalDailyModules = Math.floor((240 + maxEnk * 2) / ENK_PER_MODULE);
+            const totalWeeklyLevels = questLevels + mdBonusLevels + (Math.max(0, weeklyRuns - bonusRunsCount) * MD_NORMAL_LV);
+            const totalDailyModules = Math.floor((240 + maxEnk * enkCharges) / ENK_PER_MODULE);
             const dailyMDModules = dailyRuns * MODULE_PER_RUN;
             const remainingModules = totalDailyModules - dailyMDModules;
 
             document.getElementById('display-daily-runs').textContent = dailyRuns;
-            document.getElementById('display-module-cost-eff').innerHTML = `<span class="text-white font-black">${dailyMDModules}</span>모듈 <span class="text-xs ml-1 text-neutral-600 font-normal tracking-widest">(${dailyMDModules * ENK_PER_MODULE} ENK)</span>`;
-            const dame = document.getElementById('display-available-modules-eff'); 
-            if(dame) dame.textContent = `매일 ${totalDailyModules}개 수급 가능 (일일 2회 충전 기준)`;
-            document.getElementById('res-floored-levels').textContent = flooredLevels;
-            document.getElementById('res-total-boxes-num').textContent = flooredLevels * BOXES_PER_LEVEL;
-            document.getElementById('res-total-shards-num').textContent = weeklyShards;
-            document.getElementById('res-identity-count').textContent = (weeklyShards / IDENTITY_COST).toFixed(2);
-            document.getElementById('res-days-needed').textContent = weeklyShards > 0 ? (IDENTITY_COST / (weeklyShards / 7)).toFixed(1) : "∞";
+            document.getElementById('display-module-cost-eff').innerHTML = `<span class="text-white font-black">${dailyMDModules}</span>모듈 <span class="text-xs ml-1 text-neutral-600 font-normal tracking-widest text-left text-left">(${dailyMDModules * ENK_PER_MODULE} ENK)</span>`;
+            document.getElementById('display-available-modules-eff').textContent = `매일 ${totalDailyModules}개 수급 가능 (충전 포함)`;
+            
+            const floorLv = Math.floor(totalWeeklyLevels);
+            document.getElementById('res-floored-levels').textContent = floorLv;
+            document.getElementById('res-total-boxes-num').textContent = floorLv * BOXES_PER_LEVEL;
+            document.getElementById('res-total-shards-num').textContent = floorLv * BOXES_PER_LEVEL * SHARDS_PER_BOX;
+            document.getElementById('res-identity-count').textContent = (floorLv * BOXES_PER_LEVEL * SHARDS_PER_BOX / IDENTITY_COST).toFixed(2);
+            document.getElementById('res-days-needed').textContent = (IDENTITY_COST / (floorLv * BOXES_PER_LEVEL * SHARDS_PER_BOX / 7 || 1)).toFixed(1);
 
             const alertArea = document.getElementById('alert-area-eff');
             if (alertArea) {
-                if (remainingModules < 0) { alertArea.innerHTML = `<div class="bg-red-950/40 border border-red-600 p-2 rounded-lg animate-pulse text-[10px] sm:text-xs font-black uppercase text-red-100 text-center leading-none">! [공급 한계 도달] 일일 모듈 수급량(${totalDailyModules}개) 초과됨</div>`; }
-                else if (remainingModules <= 8) { alertArea.innerHTML = `<div class="bg-orange-950/20 border border-orange-700/40 p-2 rounded-lg text-[10px] sm:text-xs font-black uppercase text-orange-200 text-center leading-none">! 확인: 경던/끈던 가동 계획 점검 (잔여 모듈 적음)</div>`; }
+                if (remainingModules < 0) { alertArea.innerHTML = `<div class="bg-red-950/40 border border-red-600 p-2 rounded-lg animate-pulse text-[10px] sm:text-xs font-black text-red-100 text-center leading-none text-left">! [공급 한계 도달] 일일 모듈 수급량 초과</div>`; }
+                else if (remainingModules <= 8) { alertArea.innerHTML = `<div class="bg-orange-950/20 border border-orange-700/40 p-2 rounded-lg text-[10px] sm:text-xs font-black text-orange-200 text-center leading-none text-left text-left">! 확인: 경던/끈던 가동 계획 점검</div>`; }
                 else { alertArea.innerHTML = ''; }
             }
-            if(elNoteText) {
-                if(isHard) { elNoteText.textContent = hardStyle === 'bulk' ? "'일괄 수령' 시 보너스 3회분을 하드 1판에 정산하여 효율을 극대화합니다." : "'각각 수령' 시 하드 거던을 3회 직접 클리어하여 경험치를 정산합니다."; }
-                else { elNoteText.textContent = "현재 하드 보너스를 사용하지 않고 일반 거던 보너스만 적용 중입니다."; }
+
+            if(document.getElementById('note-text')) {
+                document.getElementById('note-text').textContent = isHard ? (hardStyle === 'bulk' ? "'일괄 수령' 시 보너스 3회분을 하드 1판에 정산하여 효율을 극대화합니다." : "'각각 수령' 시 하드 거던을 3회 직접 클리어하여 경험치를 정산합니다.") : "현재 하드 보너스를 사용하지 않고 일반 거던 보너스만 적용 중입니다.";
             }
-            const bulkT = document.getElementById('bulk-text'); const eachT = document.getElementById('each-text');
-            if(bulkT) bulkT.className = hardStyle === 'bulk' && isHard ? "text-xs lg:text-sm font-black uppercase text-red-500 transition-all-200" : "text-xs lg:text-sm font-black uppercase text-neutral-500 transition-all-200";
-            if(eachT) eachT.className = hardStyle === 'each' && isHard ? "text-xs lg:text-sm font-black uppercase text-red-500 transition-all-200" : "text-xs lg:text-sm font-black uppercase text-neutral-500 transition-all-200";
-            document.getElementById('res-bonus-runs').textContent = `${bonusRunsCount}회`;
-            document.getElementById('res-normal-runs').textContent = `${mdNormalRuns}회`;
+
+            const bBulk = document.getElementById('btn-bulk'); const bEach = document.getElementById('btn-each');
+            if(isHard) {
+                bBulk.classList.remove('disabled-btn'); bBulk.style.borderColor = hardStyle === 'bulk' ? '#b91c1c' : '#262626';
+                bEach.classList.remove('disabled-btn'); bEach.style.borderColor = hardStyle === 'each' ? '#b91c1c' : '#262626';
+                document.getElementById('bulk-text').className = hardStyle === 'bulk' ? "text-xs lg:text-sm font-black text-red-500" : "text-xs lg:text-sm font-black text-neutral-500";
+                document.getElementById('each-text').className = hardStyle === 'each' ? "text-xs lg:text-sm font-black text-red-500" : "text-xs lg:text-sm font-black text-neutral-500";
+            } else { 
+                bBulk.classList.add('disabled-btn'); bEach.classList.add('disabled-btn'); 
+                document.getElementById('bulk-text').className = "text-xs lg:text-sm font-black text-neutral-500";
+                document.getElementById('each-text').className = "text-xs lg:text-sm font-black text-neutral-500";
+                bBulk.style.borderColor = '#262626';
+                bEach.style.borderColor = '#262626';
+            }
+            document.getElementById('res-bonus-runs').textContent = `${isHard ? (hardStyle === 'bulk' ? 1 : 3) : Math.min(weeklyRuns, 3)}회`;
+            document.getElementById('res-normal-runs').textContent = `${Math.max(0, weeklyRuns - (isHard ? (hardStyle === 'bulk' ? 1 : 3) : Math.min(weeklyRuns, 3)))}회`;
             document.getElementById('res-total-runs').textContent = `${weeklyRuns}회 가동`;
         }
 
-        function updateTargetUI() {
+        function updateBillingUI() {
+            let totalEnkNeeded = 30 * enkCharges * maxEnk;
+            let totalDailyLunacyReq = 0;
+            for(let i=1; i<=enkCharges; i++) totalDailyLunacyReq += REFILL_COSTS[i];
+
+            let monthlyRefillCosts = [];
+            for(let d=0; d<30; d++) {
+                for(let c=1; c<=enkCharges; c++) {
+                    let cost = REFILL_COSTS[c] - REFILL_COSTS[c-1];
+                    monthlyRefillCosts.push(cost);
+                }
+            }
+            monthlyRefillCosts.sort((a,b) => a-b);
+
+            function solveGreedy(needed, sortFunc) {
+                if (needed <= 0) return { price: 0, cart: [] };
+                let pool = [];
+                PRODUCTS.forEach(p => {
+                    if(p.type === 'raw') {
+                        if(isFirst) pool.push({ ...p, name: p.name + " (초회)", qty: p.base*2, first: true, realId: p.id+'_1st' });
+                        pool.push({ ...p, qty: Math.floor(p.base * 1.1565), first: false, realId: p.id+'_std' });
+                    }
+                });
+                
+                let sortedPool = [...pool].sort(sortFunc);
+                let cart = [];
+                let currentNeeded = needed;
+                let currentPrice = 0;
+                let usedFirsts = new Set();
+
+                while (currentNeeded > 0) {
+                    let item = sortedPool.find(p => !p.first || !usedFirsts.has(p.realId));
+                    if (!item) break; 
+                    
+                    cart.push(item);
+                    currentPrice += item.price;
+                    currentNeeded -= item.qty;
+                    if (item.first) usedFirsts.add(item.realId);
+                }
+                return { price: currentPrice, cart: cart };
+            }
+
+            function getMinLunacyPrice(needed, strat) {
+                const resEff = solveGreedy(needed, (a, b) => (b.qty / b.price) - (a.qty / a.price));
+                if (strat === 'eff') return resEff;
+
+                const resCheapest = solveGreedy(needed, (a, b) => a.price - b.price);
+                const resLargest = solveGreedy(needed, (a, b) => b.qty - a.qty);
+
+                let pool = [];
+                PRODUCTS.forEach(p => {
+                    if(p.type === 'raw') {
+                        if(isFirst) pool.push({ ...p, name: p.name + " (초회)", qty: p.base*2, first: true, realId: p.id+'_1st' });
+                        pool.push({ ...p, qty: Math.floor(p.base * 1.1565), first: false, realId: p.id+'_std' });
+                    }
+                });
+                let oneBigOptions = pool.filter(p => p.qty >= needed);
+                let resOneBig = { price: Infinity, cart: [] };
+                if (oneBigOptions.length > 0) {
+                     oneBigOptions.sort((a,b) => a.price - b.price);
+                     resOneBig = { price: oneBigOptions[0].price, cart: [oneBigOptions[0]] };
+                }
+
+                let candidates = [resEff, resCheapest, resLargest, resOneBig];
+                return candidates.sort((a, b) => a.price - b.price)[0];
+            }
+
+            let weeklyPackLimit = PRODUCTS.find(p => p.type === 'weekly').limit; 
+            let bestScenario = null; 
+
+            for(let packCount=0; packCount<=weeklyPackLimit; packCount++) {
+                let currentPackCost = packCount * 9900;
+                let enkFromPacks = packCount * 1200;
+                
+                let remainingEnkNeeded = Math.max(0, totalEnkNeeded - enkFromPacks);
+                let refillsNeeded = Math.ceil(remainingEnkNeeded / maxEnk);
+                
+                let lunacyNeededForRefills = 0;
+                for(let i=0; i<refillsNeeded; i++) {
+                    if (i < monthlyRefillCosts.length) {
+                        lunacyNeededForRefills += monthlyRefillCosts[i];
+                    }
+                }
+
+                let netLunacyDeficit = Math.max(0, lunacyNeededForRefills - BASE_MONTHLY_LUNACY);
+                let lunacySol = getMinLunacyPrice(netLunacyDeficit, billStrat);
+                let totalScenCost = currentPackCost + lunacySol.price;
+
+                if (!bestScenario || totalScenCost < bestScenario.cost) {
+                    bestScenario = {
+                        cost: totalScenCost,
+                        packs: packCount,
+                        lunacyCart: lunacySol.cart,
+                        lunacyNeeded: netLunacyDeficit
+                    };
+                }
+            }
+
+            let grouped = [];
+            
+            if (bestScenario.packs > 0) {
+                grouped.push({
+                    name: '주간 엔케팔린 패키지',
+                    count: bestScenario.packs,
+                    detail: `총 ${bestScenario.packs * 1200} ENK 대체`,
+                    price: 9900
+                });
+            }
+            
+            bestScenario.lunacyCart.forEach(c => {
+                let ex = grouped.find(g => g.name === c.name);
+                if(ex) ex.count++;
+                else grouped.push({ ...c, count: 1 });
+            });
+
+            const recL = document.getElementById('recommendation-list');
+            recL.innerHTML = '';
+            
+            if(grouped.length === 0) {
+                recL.innerHTML = '<div class="text-neutral-500 italic text-center py-10">추가 과금 없이 월간 광기 수급량만으로 충전이 가능합니다.</div>';
+            } else {
+                grouped.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-black/40 border border-neutral-800 p-4 rounded-xl flex justify-between items-center";
+                    card.innerHTML = `
+                        <div class="flex flex-col gap-1 min-w-0 flex-1">
+                            <div class="flex items-center gap-2 w-full">
+                                <span class="text-xs sm:text-sm lg:text-base font-black text-white italic truncate block flex-1 text-left" title="${item.name}">${item.name}</span>
+                                <span class="bg-red-900/40 text-red-500 text-[10px] font-bold px-1.5 py-0.5 rounded leading-none flex-none text-left">X${item.count}</span>
+                            </div>
+                            <span class="text-[9px] text-neutral-500 text-left">${item.detail || (Math.floor(item.qty) + ' 광기')}</span>
+                        </div>
+                        <div class="text-right flex-none ml-4 text-left text-left">
+                            <div class="text-orange-500 font-black text-xs sm:text-base lg:text-lg text-left">${(item.price * item.count).toLocaleString()}원</div>
+                        </div>
+                    `;
+                    recL.appendChild(card);
+                });
+            }
+
+            document.getElementById('billing-total-price').textContent = bestScenario.cost.toLocaleString() + "원";
+            document.getElementById('stat-daily-lunacy').textContent = `${totalDailyLunacyReq}개`;
+            document.getElementById('stat-daily-enk').textContent = `${totalEnkNeeded} ENK`;
+            document.getElementById('stat-net-deficit').textContent = `${Math.ceil(Math.max(0, bestScenario.lunacyNeeded))}개`;
+            document.getElementById('rec-runner-msg').textContent = bestScenario.cost > 0 ? "구매 조합 분석 완료" : "안정적인 충전 궤도";
+
+            const bEff = document.getElementById('btn-strat-eff');
+            const bCost = document.getElementById('btn-strat-cost');
+            bEff.style.borderColor = billStrat === 'eff' ? '#b91c1c' : '#262626';
+            bEff.querySelector('span:first-child').style.color = billStrat === 'eff' ? '#ef4444' : '#737373';
+            bCost.style.borderColor = billStrat === 'cost' ? '#b91c1c' : '#262626';
+            bCost.querySelector('span:first-child').style.color = billStrat === 'cost' ? '#ef4444' : '#737373';
+            
+            const boxArea = document.getElementById('box-reduction-info');
+            const boxText = document.getElementById('box-reduction-text');
+            if(bestScenario.packs > 0) {
+                boxArea.classList.remove('hidden');
+                boxText.innerHTML = `엔케팔린 패키지 ${bestScenario.packs}개(${bestScenario.packs*1200} ENK)가<br><span class="text-white">월간 필요량의 ${(bestScenario.packs * 1200 / totalEnkNeeded * 100).toFixed(1)}%</span>를 대체했습니다.`;
+            } else { boxArea.classList.add('hidden'); }
+
+            const fLabel = document.getElementById('first-bonus-label'); const fBadge = document.getElementById('first-bonus-badge');
+            if(isFirst) {
+                fLabel.className = "flex items-center gap-4 cursor-pointer group leading-none text-xs lg:text-sm font-black transition-all-200 uppercase tracking-widest text-orange-500 text-left text-left";
+                fBadge.className = "cursor-pointer flex items-center justify-center bg-orange-950/20 border-2 border-orange-900 rounded-xl h-[55px] lg:h-[60px] text-left text-left hover:border-orange-500/50";
+                fBadge.querySelector('span').className = "text-[11px] lg:text-xs font-black uppercase tracking-widest text-orange-400";
+            } else {
+                fLabel.className = "flex items-center gap-4 cursor-pointer group leading-none text-xs lg:text-sm font-black transition-all-200 uppercase tracking-widest text-neutral-500 text-left text-left";
+                fBadge.className = "cursor-pointer flex items-center justify-center bg-neutral-800/40 border-2 border-neutral-700/30 rounded-xl h-[55px] lg:h-[60px] hover:border-neutral-500/50";
+                fBadge.querySelector('span').className = "text-[11px] lg:text-xs font-black text-neutral-500 uppercase";
+            }
+        }
+
+        function updateShardUI() {
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const goalDate = new Date(targetDate); goalDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.ceil((goalDate - today) / (1000 * 60 * 60 * 24));
-            const diffWeeks = diffDays / 7;
-            const totalDailyModules = Math.floor((240 + maxEnk * 2) / ENK_PER_MODULE);
-            const totalShardsGoal = targetIds * IDENTITY_COST;
+            const diffDays = Math.max(1, Math.ceil((goalDate - today) / (1000 * 60 * 60 * 24)));
+            const totalDailyModules = Math.floor((240 + maxEnk * enkCharges) / ENK_PER_MODULE);
             const currentShardsOwned = currentBoxes * SHARDS_PER_BOX;
-            const remainingShardsNeeded = Math.max(0, totalShardsGoal - currentShardsOwned);
-            const passiveLevels = (1 * diffDays) + (2 * Math.floor(diffWeeks));
-            let bonusLevelsDuration = (isHard ? (hardStyle === 'bulk' ? 22.5 : 25) : (4.5 * 3)) * diffWeeks;
-            const remainingNormalLevelsForGoal = Math.max(0, (remainingShardsNeeded / (BOXES_PER_LEVEL * SHARDS_PER_BOX)) - passiveLevels - bonusLevelsDuration);
-            const dailyRunsRequired = (remainingNormalLevelsForGoal / MD_NORMAL_LV) / diffDays;
-            const rtdMain = document.getElementById('res-target-daily-runs-main');
-            if(rtdMain) { rtdMain.textContent = diffDays <= 0 ? "0.0" : dailyRunsRequired.toFixed(1); }
-            const safeDailyRuns = (totalDailyModules - 9) / MODULE_PER_RUN;
-            const maxDailyRuns = (totalDailyModules - 5) / MODULE_PER_RUN;
-            const calculateMaxPossible = (runs) => {
-                const totalLv = passiveLevels + bonusLevelsDuration + (runs * diffDays * MD_NORMAL_LV);
-                return (totalLv * BOXES_PER_LEVEL * SHARDS_PER_BOX + currentShardsOwned) / IDENTITY_COST;
+            const totalNeeded = Math.max(0, (targetIds * IDENTITY_COST) - currentShardsOwned);
+            const passiveLv = (1 * diffDays) + (2 * Math.floor(diffDays/7));
+            let bonusLv = (isHard ? (hardStyle === 'bulk' ? 22.5 : 25) : 13.5) * (diffDays/7);
+            const normalLvNeeded = Math.max(0, (totalNeeded / (BOXES_PER_LEVEL * SHARDS_PER_BOX)) - passiveLv - bonusLv);
+            const dailyRunsReq = (normalLvNeeded / MD_NORMAL_LV) / diffDays;
+            
+            document.getElementById('res-target-daily-runs-main').textContent = dailyRunsReq.toFixed(1);
+            
+            const badge = document.getElementById('feasibility-badge'); const msg = document.getElementById('feasibility-msg');
+            if(badge && msg) {
+                const safeD = (totalDailyModules - 9) / MODULE_PER_RUN;
+                const maxD = (totalDailyModules - 5) / MODULE_PER_RUN;
+                const bB = "px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-center mb-2 leading-none text-left";
+                if (dailyRunsReq <= safeD) { badge.className = `${bB} bg-green-900/40 text-green-400`; badge.textContent = "안정 가동 가능"; msg.innerHTML = `<span class="text-green-400 text-center text-left">여유로움</span>`; }
+                else if (dailyRunsReq <= maxD) { badge.className = `${bB} bg-orange-900/40 text-orange-400`; badge.textContent = "가동 한계 근접"; msg.innerHTML = `<span class="text-orange-400 text-center text-center text-center text-center text-center text-center text-left">무리한 일정</span>`; }
+                else { badge.className = `${bB} bg-red-900/40 text-red-500`; badge.textContent = "목표 달성 불가"; msg.innerHTML = `<span class="text-red-500 text-center text-center text-center text-center text-center text-center text-center text-center text-left">공급 한계 초과</span>`; }
+                document.getElementById('safe-limit-info').textContent = `일일 평균 ${safeD.toFixed(1)}회 가능`;
+                document.getElementById('max-limit-info').textContent = `일일 평균 ${maxD.toFixed(1)}회 가능`;
+            }
+            document.getElementById('res-target-summary').innerHTML = `오늘부터 <span class="text-white underline decoration-red-900 font-black">${diffDays}</span>일 남았습니다.<br>총 <span class="text-white underline decoration-red-900 font-black">${Math.ceil(normalLvNeeded/MD_NORMAL_LV)}</span>회의 추가 거던 클리어 필요`;
+        }
+
+        function updateAll() { updateEffUI(); updateBillingUI(); updateShardUI(); }
+
+        window.onload = () => {
+            document.getElementById('input-max-enk').value = maxEnk;
+            document.getElementById('input-enk-charges').value = enkCharges;
+            document.getElementById('input-is-hard').checked = isHard;
+            document.getElementById('input-is-first').checked = isFirst;
+            document.getElementById('input-target-date').value = targetDate;
+            document.getElementById('input-target-ids').value = targetIds;
+            document.getElementById('input-current-boxes').value = currentBoxes;
+
+            document.getElementById('input-max-enk').addEventListener('input', (e) => { maxEnk = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.MAX_ENK, maxEnk); updateAll(); });
+            document.getElementById('input-enk-charges').addEventListener('input', (e) => { enkCharges = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.ENK_CHARGES, enkCharges); updateAll(); });
+            
+            // Hard Mode Toggle Logic
+            document.getElementById('input-is-hard').addEventListener('change', (e) => { 
+                isHard = e.target.checked; 
+                safeSave(STORAGE_KEYS.IS_HARD, isHard); 
+                updateAll(); 
+            });
+            
+            const handleHardModeToggle = (style) => {
+                if (!isHard) {
+                    isHard = true;
+                    hardStyle = style;
+                } else if (hardStyle === style) {
+                    isHard = false;
+                } else {
+                    hardStyle = style;
+                }
+                document.getElementById('input-is-hard').checked = isHard;
+                safeSave(STORAGE_KEYS.IS_HARD, isHard);
+                safeSave(STORAGE_KEYS.HARD_STYLE, hardStyle);
+                updateAll();
             };
-            const safePossibleIDs = calculateMaxPossible(safeDailyRuns);
-            const maxPossibleIDs = calculateMaxPossible(maxDailyRuns);
-            const badge = document.getElementById('feasibility-badge');
-            const msg = document.getElementById('feasibility-msg');
-            const safeInfo = document.getElementById('safe-limit-info');
-            const maxInfo = document.getElementById('max-limit-info');
-            if(badge && msg && safeInfo && maxInfo) {
-                safeInfo.textContent = `일일 평균 ${safeDailyRuns.toFixed(1)}회 (약 ${safePossibleIDs.toFixed(1)}개 정가 가능)`;
-                maxInfo.textContent = `일일 평균 ${maxDailyRuns.toFixed(1)}회 (약 ${maxPossibleIDs.toFixed(1)}개 정가 가능)`;
-                const badgeBase = "px-4 py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-widest text-center mb-2";
-                if (dailyRunsRequired <= safeDailyRuns) { badge.className = `${badgeBase} bg-green-900/40 text-green-400`; badge.textContent = "안정 가동 가능"; msg.innerHTML = `<span class="text-green-400 text-center">여유로움</span>`; }
-                else if (dailyRunsRequired <= maxDailyRuns) { badge.className = `${badgeBase} bg-orange-900/40 text-orange-400`; badge.textContent = "가동 한계 근접"; msg.innerHTML = `<span class="text-orange-400 text-center text-center">약간의 무리 필요</span>`; }
-                else { badge.className = `${badgeBase} bg-red-900/40 text-red-500`; badge.textContent = "목표 달성 불가"; msg.innerHTML = `<span class="text-red-500 text-center text-center">공급 한계 초과</span>`; }
+
+            document.getElementById('btn-bulk').onclick = () => handleHardModeToggle('bulk');
+            document.getElementById('btn-each').onclick = () => handleHardModeToggle('each');
+
+            // First Purchase Toggle Logic
+            document.getElementById('input-is-first').addEventListener('change', (e) => { 
+                isFirst = e.target.checked; 
+                safeSave(STORAGE_KEYS.IS_FIRST, isFirst); 
+                updateAll(); 
+            });
+
+            document.getElementById('first-bonus-badge').onclick = () => {
+                isFirst = !isFirst;
+                document.getElementById('input-is-first').checked = isFirst;
+                safeSave(STORAGE_KEYS.IS_FIRST, isFirst);
+                updateAll();
+            };
+
+            document.getElementById('btn-strat-eff').onclick = () => { billStrat = 'eff'; safeSave(STORAGE_KEYS.BILL_STRAT, 'eff'); updateAll(); };
+            document.getElementById('btn-strat-cost').onclick = () => { billStrat = 'cost'; safeSave(STORAGE_KEYS.BILL_STRAT, 'cost'); updateAll(); };
+            document.getElementById('input-target-date').addEventListener('input', (e) => { targetDate = e.target.value; safeSave(STORAGE_KEYS.TARGET_DATE, targetDate); updateAll(); });
+            document.getElementById('input-target-ids').addEventListener('input', (e) => { targetIds = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.TARGET_IDS, targetIds); updateAll(); });
+            document.getElementById('input-current-boxes').addEventListener('input', (e) => { currentBoxes = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.CURRENT_BOXES, currentBoxes); updateAll(); });
+
+            const ttTrigger = document.getElementById('tooltip-trigger');
+            if(ttTrigger) { ttTrigger.addEventListener('click', (e) => { e.stopPropagation(); ttTrigger.classList.toggle('active'); }); }
+            
+            const billTtTrigger = document.getElementById('billing-tooltip-trigger');
+            if(billTtTrigger) { 
+                billTtTrigger.addEventListener('click', (e) => { 
+                    e.stopPropagation(); 
+                    billTtTrigger.classList.toggle('active'); 
+                }); 
             }
-            const rts = document.getElementById('res-target-summary');
-            if(rts) rts.innerHTML = `오늘부터 <span class="text-white underline decoration-red-900 font-black text-left">${diffDays}</span>일 남았습니다.<br>총 <span class="text-white underline decoration-red-900 font-black text-left text-left text-left text-left text-left text-left">${Math.ceil(remainingNormalLevelsForGoal / MD_NORMAL_LV)}</span>회의 추가 거던 클리어 필요`;
-        }
 
-        function updateAll() {
-            updateEffUI(); updateTargetUI();
-            const label = document.getElementById('hard-label');
-            if (label) {
-                if (isHard) { label.classList.add('text-red-600'); if(elBtnBulk) elBtnBulk.classList.remove('disabled-btn'); if(elBtnEach) elBtnEach.classList.remove('disabled-btn'); }
-                else { label.classList.remove('text-red-600'); if(elBtnBulk) elBtnBulk.classList.add('disabled-btn'); if(elBtnEach) elBtnEach.classList.add('disabled-btn'); }
-            }
-        }
+            document.addEventListener('click', () => { 
+                if(ttTrigger) ttTrigger.classList.remove('active'); 
+                if(billTtTrigger) billTtTrigger.classList.remove('active');
+            });
 
-        elMaxEnkInput.addEventListener('input', (e) => { maxEnk = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.MAX_ENK, maxEnk); updateAll(); });
-        elIsHardInput.addEventListener('change', (e) => { isHard = e.target.checked; safeSave(STORAGE_KEYS.IS_HARD, isHard); updateAll(); });
-        elBtnBulk.onclick = () => { if(isHard) { hardStyle = 'bulk'; safeSave(STORAGE_KEYS.HARD_STYLE, hardStyle); updateAll(); } };
-        elBtnEach.onclick = () => { if(isHard) { hardStyle = 'each'; safeSave(STORAGE_KEYS.HARD_STYLE, hardStyle); updateAll(); } };
-        elTargetDateInput.addEventListener('input', (e) => { targetDate = e.target.value; safeSave(STORAGE_KEYS.TARGET_DATE, targetDate); updateAll(); });
-        elTargetIdsInput.addEventListener('input', (e) => { targetIds = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.TARGET_IDS, targetIds); updateAll(); });
-        elCurrentBoxesInput.addEventListener('input', (e) => { currentBoxes = parseInt(e.target.value) || 0; safeSave(STORAGE_KEYS.CURRENT_BOXES, currentBoxes); updateAll(); });
-        elDailyRunsM.addEventListener('input', (e) => { dailyRuns = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.DAILY_RUNS, dailyRuns); updateAll(); });
-        elDailyRunsV.addEventListener('input', (e) => { dailyRuns = parseInt(e.target.value) || 1; safeSave(STORAGE_KEYS.DAILY_RUNS, dailyRuns); updateAll(); });
-
-        const ttTrigger = document.getElementById('tooltip-trigger');
-        if(ttTrigger) { ttTrigger.addEventListener('click', (e) => { e.stopPropagation(); ttTrigger.classList.toggle('active'); }); }
-        document.addEventListener('click', () => { if(ttTrigger) ttTrigger.classList.remove('active'); });
-
-        updateAll();
+            switchTab(activeTab);
+        };
     </script>
 </body>
 </html>
